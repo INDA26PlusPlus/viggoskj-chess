@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "viggoskj-chess-lib",
+    "viggoskj-chess-cli",
+]
+
+resolver = "3"

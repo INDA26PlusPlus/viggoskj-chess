@@ -1,0 +1,7 @@
+[package]
+name = "viggoskj-chess-cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+viggoskj-chess-lib = { path = "../viggoskj-chess-lib" }
