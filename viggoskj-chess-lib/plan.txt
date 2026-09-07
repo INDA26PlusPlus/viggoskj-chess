@@ -1,0 +1,26 @@
+everything
+
+chess pice movement
+chess pice taking
+
+check and checkmate detectiion
+
+
+pawn promoting 
+castling
+ant pessant (how tf is that spelled?)
+
+
+
+match history
+removed pices trackign
+resigning
+stalemate
+repetition stalemate?
+
+
+should clock be in lib or not?
+
+
+
+implement move history from the begining
