@@ -1,7 +1,8 @@
 use std::iter::Enumerate;
 
 use crate::{
-    bit_board::{BitBoard, point},
+    Piece::Square,
+    bit_board::{self, BitBoard, point},
     board::{Board, ColorBoard, validate_square},
     chess_error::ChessError,
     game::Color::White,
@@ -13,17 +14,18 @@ pub struct Game {
     pub turn: Color,
 }
 
-pub fn move_piece(
+pub fn piece_moves(
     game: &Game,
-    chess_move: piece::Move
-) -> Result<Game, ChessError> {
-    piece::validate_move(chess_move)?;
-
-    let piece = match game.board.get_pice(chess_move.origin_row, chess_move.origin_col) {
+    piece_square: piece::Square,
+) -> Result<(Piece, BitBoard), ChessError> {
+    let piece = match game.board.get_pice(piece_square.row, piece_square.col) {
         Some(t) => t,
-        _ => return Err(ChessError::InvalidMove),
+        _ => {
+            return Err(ChessError::InvalidMove {
+                reason: crate::chess_error::InvalidMoveReason::NoTargetPiece,
+            });
+        }
     };
-
     let solid_mask = match game.turn {
         Color::Black => game.board.black.mask(),
         Color::White => game.board.white.mask(),
@@ -34,32 +36,49 @@ pub fn move_piece(
         Color::White => game.board.black.mask(),
     };
 
-    let move_set = piece_basic_move_bit_board(piece, solid_mask, attack_mask);
+    Ok((
+        piece,
+        piece_basic_move_bit_board(piece, solid_mask, attack_mask),
+    ))
+}
 
-    if (move_set & point(chess_move.target_row, chess_move.target_col)) == 0 {
-        return Err(ChessError::InvalidMove);
+pub fn move_piece(game: &Game, chess_move: piece::Move) -> Result<Game, ChessError> {
+    let (piece, move_set) = piece_moves(game, chess_move.piece_square)?;
+    let target_mask = point(chess_move.target_square.row, chess_move.target_square.col);
+
+    if (move_set & target_mask) == 0 {
+        return Err(ChessError::InvalidMove {
+            reason: crate::chess_error::InvalidMoveReason::NotAMoveOption,
+        });
     }
 
     let new_board = Board {
-        black: game.board.black,
+        black: ColorBoard {
+            pawns: game.board.black.pawns & !target_mask,
+            knights: game.board.black.knights & !target_mask,
+            bishops: game.board.black.bishops & !target_mask,
+            rooks: game.board.black.rooks & !target_mask,
+            queens: game.board.black.queens & !target_mask,
+            kings: game.board.black.kings & !target_mask,
+        },
         white: ColorBoard {
             bishops: game.board.white.bishops & (!piece.board_position)
-                | if_piece_type(piece.piece_type, PieceType::Bishop, point(chess_move.target_row, chess_move.target_col)),
+                | if_piece_type(piece.piece_type, PieceType::Bishop, target_mask),
             kings: game.board.white.kings & (!piece.board_position)
-                | if_piece_type(piece.piece_type, PieceType::King, point(chess_move.target_row, chess_move.target_col)),
+                | if_piece_type(piece.piece_type, PieceType::King, target_mask),
             knights: game.board.white.knights & (!piece.board_position)
-                | if_piece_type(piece.piece_type, PieceType::Knight, point(chess_move.target_row, chess_move.target_col)),
+                | if_piece_type(piece.piece_type, PieceType::Knight, target_mask),
             pawns: game.board.white.pawns & (!piece.board_position)
-                | if_piece_type(piece.piece_type, PieceType::Pawn, point(chess_move.target_row, chess_move.target_col)),
+                | if_piece_type(piece.piece_type, PieceType::Pawn, target_mask),
             queens: game.board.white.queens & (!piece.board_position)
-                | if_piece_type(piece.piece_type, PieceType::Queen, point(chess_move.target_row, chess_move.target_col)),
+                | if_piece_type(piece.piece_type, PieceType::Queen, target_mask),
             rooks: game.board.white.rooks & (!piece.board_position)
-                | if_piece_type(piece.piece_type, PieceType::Rook, point(chess_move.target_row, chess_move.target_col)),
+                | if_piece_type(piece.piece_type, PieceType::Rook, target_mask),
         },
     };
 
     Ok(Game {
-        turn: game.turn.other(),
+        turn: game.turn,
         board: new_board,
     })
 }

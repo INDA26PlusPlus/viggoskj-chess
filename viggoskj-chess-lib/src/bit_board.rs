@@ -59,7 +59,7 @@ pub fn full() -> BitBoard {
 }
 
 pub fn bitboard_string(board: BitBoard) -> String {
-    (0..8)
+    (0..8).rev()
         .map(|row| (0..8).map(move |col| at(board, row, col)))
         .fold(String::new(), |all, row| {
             all + &row.fold(String::new(), |mut all, c| {
