@@ -118,6 +118,7 @@ pub fn piece_basic_move_bit_board(
         PieceType::Pawn => {
             single_move_bit_board(forward, 0, piece.board_position, self_mask)
                 | pawn_capture_bit_board(piece.board_position, attack_mask, forward)
+                | pawn_double_step_board(piece.board_position, self_mask, attack_mask, forward)
         }
         PieceType::Rook => cross_move_bit_board(piece.board_position, self_mask, attack_mask),
         PieceType::Bishop => x_move_bit_board(piece.board_position, self_mask, attack_mask),
@@ -125,7 +126,7 @@ pub fn piece_basic_move_bit_board(
             cross_move_bit_board(piece.board_position, self_mask, attack_mask)
                 | x_move_bit_board(piece.board_position, self_mask, attack_mask)
         }
-        PieceType::King => king_move_bit_board(piece.board_position),
+        PieceType::King => king_move_bit_board(piece.board_position, self_mask),
         PieceType::Knight => knight_move_bit_board(piece.board_position),
     }
 }
@@ -152,15 +153,16 @@ fn x_move_bit_board(
         | move_bit_board(-1, 1, piece_placement, solid_mask, attack_mask)
 }
 
-fn king_move_bit_board(piece_placement: BitBoard) -> BitBoard {
-    displace(piece_placement, -1, -1)
+fn king_move_bit_board(piece_placement: BitBoard, self_mask: BitBoard) -> BitBoard {
+    (displace(piece_placement, -1, -1)
         | displace(piece_placement, -1, 0)
         | displace(piece_placement, -1, 1)
         | displace(piece_placement, 0, -1)
         | displace(piece_placement, 0, 1)
         | displace(piece_placement, 1, -1)
         | displace(piece_placement, 1, 0)
-        | displace(piece_placement, 1, 1)
+        | displace(piece_placement, 1, 1))
+        & !self_mask
 }
 
 fn knight_move_bit_board(piece_placement: BitBoard) -> BitBoard {
@@ -209,4 +211,16 @@ fn pawn_capture_bit_board(
 ) -> BitBoard {
     displace(piece_placement, forwards, 1) & attack_mask
         | displace(piece_placement, forwards, -1) & attack_mask
+}
+
+fn pawn_double_step_board(
+    piece_placement: BitBoard,
+    self_mask: BitBoard,
+    attack_mask: BitBoard,
+    forward: i32,
+) -> BitBoard {
+    let mut now: u64 = piece_placement;
+    now = single_move_bit_board(forward, 0, now, self_mask) & !(attack_mask);
+    now = single_move_bit_board(forward, 0, now, self_mask);
+    return now & (!piece_placement);
 }

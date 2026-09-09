@@ -1,3 +1,5 @@
+use std::panic::panic_any;
+
 use viggoskj_chess_lib::{
     bit_board::{self, BitBoard, bitboard_string, displace},
     game,
@@ -17,8 +19,27 @@ pub fn main() {
         "d8d7", "f7g6", "d7g7", "g6f5", "f6f7", "e6e1", "c1c2",
     ];
 
-    for m in moves {
-        g = viggoskj_chess_lib::game::move_piece(&g, piece::parse_move(m).unwrap()).unwrap();
-        println!("{}", g.board.to_string());
-    };
+    for ms in moves {
+        let m = piece::parse_move(ms).unwrap();
+
+        let r = viggoskj_chess_lib::game::move_piece(&g, m);
+        match r {
+            Ok(g2) => {
+                g = g2;
+                println!("{}", g.board.to_string());
+            }
+            Err(v) => {
+                println!("{}", ms);
+                println!(
+                    "{}",
+                    bitboard_string(
+                        viggoskj_chess_lib::game::piece_moves(&g, m.piece_square)
+                            .unwrap()
+                            .1
+                    )
+                );
+                Err(v).unwrap()
+            }
+        };
+    }
 }

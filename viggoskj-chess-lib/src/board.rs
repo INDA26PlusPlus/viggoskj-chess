@@ -137,12 +137,12 @@ fn white_default_bishop_board() -> BitBoard {
     return bit_board::union(bit_board::point(0, 2), bit_board::point(0, 5));
 }
 
-fn white_default_queen_board() -> BitBoard {
-    return bit_board::point(0, 3);
+fn black_default_queen_board() -> BitBoard {
+    return bit_board::point(7, 3);
 }
 
-fn white_default_king_board() -> BitBoard {
-    return bit_board::point(0, 4);
+fn black_default_king_board() -> BitBoard {
+    return bit_board::point(7, 4);
 }
 
 fn black_default_pawn_board() -> BitBoard {
@@ -161,12 +161,12 @@ fn black_default_bishop_board() -> BitBoard {
     return bit_board::union(bit_board::point(7, 2), bit_board::point(7, 5));
 }
 
-fn black_default_queen_board() -> BitBoard {
-    return bit_board::point(7, 4);
+fn white_default_queen_board() -> BitBoard {
+    return bit_board::point(0, 3);
 }
 
-fn black_default_king_board() -> BitBoard {
-    return bit_board::point(7, 3);
+fn white_default_king_board() -> BitBoard {
+    return bit_board::point(0, 4);
 }
 
 pub fn create_start_board() -> Board {
