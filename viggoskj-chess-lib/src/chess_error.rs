@@ -11,4 +11,5 @@ pub enum InvalidMoveReason
     Generic,
     NotAMoveOption,
     NoTargetPiece,
+    WrongColor,
 }

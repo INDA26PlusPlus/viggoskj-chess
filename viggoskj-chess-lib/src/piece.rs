@@ -107,24 +107,23 @@ fn parse_col(c: char) -> Result<u32, ChessError> {
 
 pub fn piece_basic_move_bit_board(
     piece: Piece,
-    solid_mask: BitBoard,
+    self_mask: BitBoard,
     attack_mask: BitBoard,
 ) -> BitBoard {
+    let forward = match piece.piece_color {
+        Color::White => 1,
+        Color::Black => -1,
+    };
     match piece.piece_type {
-        PieceType::Pawn => single_move_bit_board(
-            match piece.piece_color {
-                Color::White => 1,
-                Color::Black => -1,
-            },
-            0,
-            piece.board_position,
-            solid_mask,
-        ),
-        PieceType::Rook => cross_move_bit_board(piece.board_position, solid_mask, attack_mask),
-        PieceType::Bishop => x_move_bit_board(piece.board_position, solid_mask, attack_mask),
+        PieceType::Pawn => {
+            single_move_bit_board(forward, 0, piece.board_position, self_mask)
+                | pawn_capture_bit_board(piece.board_position, attack_mask, forward)
+        }
+        PieceType::Rook => cross_move_bit_board(piece.board_position, self_mask, attack_mask),
+        PieceType::Bishop => x_move_bit_board(piece.board_position, self_mask, attack_mask),
         PieceType::Queen => {
-            cross_move_bit_board(piece.board_position, solid_mask, attack_mask)
-                | x_move_bit_board(piece.board_position, solid_mask, attack_mask)
+            cross_move_bit_board(piece.board_position, self_mask, attack_mask)
+                | x_move_bit_board(piece.board_position, self_mask, attack_mask)
         }
         PieceType::King => king_move_bit_board(piece.board_position),
         PieceType::Knight => knight_move_bit_board(piece.board_position),
@@ -198,7 +197,16 @@ fn single_move_bit_board(
     row_move: i32,
     col_move: i32,
     piece_placement: BitBoard,
-    solid_mask: BitBoard,
+    self_mask: BitBoard,
 ) -> BitBoard {
-    (displace(piece_placement, row_move, col_move)) & (!solid_mask) | piece_placement
+    (displace(piece_placement, row_move, col_move)) & (!self_mask) | piece_placement
+}
+
+fn pawn_capture_bit_board(
+    piece_placement: BitBoard,
+    attack_mask: BitBoard,
+    forwards: i32,
+) -> BitBoard {
+    displace(piece_placement, forwards, 1) & attack_mask
+        | displace(piece_placement, forwards, -1) & attack_mask
 }
