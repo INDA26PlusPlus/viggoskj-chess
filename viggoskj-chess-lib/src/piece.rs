@@ -1,8 +1,12 @@
+use std::ptr::read;
+
 use crate::bit_board::{BitBoard, displace};
+use crate::board::validate_square;
+use crate::chess_error::ChessError;
 use crate::game::Color;
 use crate::{bit_board, game};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum PieceType {
     Pawn,
     Rook,
@@ -30,6 +34,62 @@ pub struct Piece {
     pub piece_color: game::Color,
     pub piece_type: PieceType,
     pub board_position: BitBoard,
+}
+
+#[derive(Copy, Clone)]
+pub struct Move {
+    pub origin_row: u32,
+    pub origin_col: u32,
+    pub target_row: u32,
+    pub target_col: u32,
+}
+
+pub fn parse_move(move_str: &str) -> Result<Move, ChessError> {
+    if move_str.len() != 4 {
+        return Err(ChessError::InvalidMove);
+    } else {
+        return Ok(Move {
+            origin_col: parse_col(move_str.chars().nth(0).unwrap())?,
+            origin_row: parse_row(move_str.chars().nth(1).unwrap())?,
+            target_col: parse_col(move_str.chars().nth(2).unwrap())?,
+            target_row: parse_row(move_str.chars().nth(3).unwrap())?,
+        })
+    }
+}
+
+fn parse_row(c: char) -> Result<u32, ChessError> {
+    match c {
+        '1' => Ok(0),
+        '2' => Ok(1),
+        '3' => Ok(2),
+        '4' => Ok(3),
+        '5' => Ok(4),
+        '6' => Ok(5),
+        '7' => Ok(6),
+        '8' => Ok(7),
+        _ => Err(ChessError::InvalidSquare)
+    }
+}
+
+pub fn validate_move(chess_move: Move) -> Result<(), ChessError>
+{
+    validate_square(chess_move.origin_row, chess_move.origin_col)?;
+    validate_square(chess_move.target_row, chess_move.target_col)?;
+    Ok(())
+}
+
+fn parse_col(c: char) -> Result<u32, ChessError> {
+    match c {
+        'a' => Ok(0),
+        'b' => Ok(1),
+        'c' => Ok(2),
+        'd' => Ok(3),
+        'e' => Ok(4),
+        'f' => Ok(5),
+        'g' => Ok(6),
+        'h' => Ok(7),
+        _ => Err(ChessError::InvalidSquare)
+    }
 }
 
 pub fn piece_basic_move_bit_board(

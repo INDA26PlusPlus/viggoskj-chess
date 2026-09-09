@@ -3,6 +3,7 @@ pub mod game;
 pub mod bit_board;
 pub mod chess_error;
 pub mod piece;
+pub mod Piece;
 
 pub fn create_game() -> game::Game {
     let game: game::Game = game::Game {
