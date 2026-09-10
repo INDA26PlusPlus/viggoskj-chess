@@ -49,6 +49,12 @@ pub struct Board {
     pub black: ColorBoard,
 }
 
+#[derive(Copy, Clone)]
+pub struct Square {
+    pub row: u32,
+    pub col: u32,
+}
+
 impl ToString for Board {
     fn to_string(&self) -> String {
         (0..8)

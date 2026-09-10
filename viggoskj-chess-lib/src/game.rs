@@ -1,16 +1,8 @@
 use std::f32::consts::E;
 
 use crate::{
-    advanced_moves::{do_kingside_castling, do_queenside_castling},
-    bit_board::{self, BitBoard, point},
-    board::{self, Board, ColorBoard, validate_square},
-    chess_error::ChessError,
-    game::Color::White,
-    piece::{
-        self, AdvancedMove,
-        Move::{Advanced, Basic},
-        Piece, PieceType, Square, castling_board, kingside_castling_move,
-        piece_basic_move_bit_board, queenside_castling_move, square_bitboard,
+    advanced_moves::{do_kingside_castling, do_queenside_castling}, bit_board::{self, BitBoard, bitboard_string, point}, board::{self, Board, ColorBoard, Square, validate_square}, chess_error::ChessError, game::Color::White, moves::{AdvancedMove, BasicMove}, piece::{
+        Piece, PieceType, castling_board, kingside_castling_move, piece_basic_move_bit_board, queenside_castling_move, square_bitboard,
     },
 };
 
@@ -27,7 +19,7 @@ pub struct Game {
 
 pub fn piece_basic_moves_bitboard(
     game: &Game,
-    piece_square: piece::Square,
+    piece_square: Square,
 ) -> Result<(Piece, BitBoard), ChessError> {
     let piece = match game.board.get_pice(piece_square.row, piece_square.col) {
         Some(t) => t,
@@ -55,7 +47,7 @@ pub fn piece_basic_moves_bitboard(
 
 pub fn piece_advanced_moves_bitboard(
     game: &Game,
-    piece_square: piece::Square,
+    piece_square: Square,
 ) -> Result<(Piece, BitBoard), ChessError> {
     let piece = match game.board.get_pice(piece_square.row, piece_square.col) {
         Some(t) => t,
@@ -70,12 +62,6 @@ pub fn piece_advanced_moves_bitboard(
         Color::Black => game.board.black.mask(),
         Color::White => game.board.white.mask(),
     };
-
-    let attack_mask = match game.turn {
-        Color::Black => game.board.white.mask(),
-        Color::White => game.board.black.mask(),
-    };
-
     let mut moves = 0;
 
     if piece.piece_type == PieceType::King {
@@ -97,7 +83,7 @@ pub fn piece_advanced_moves_bitboard(
 
 pub fn resolve_advanced_move(
     game: &Game,
-    chess_move: piece::BasicMove,
+    chess_move: BasicMove,
 ) -> Result<AdvancedMove, ChessError> {
     let piece_square = chess_move.piece_square;
 
@@ -163,7 +149,7 @@ pub fn resolve_advanced_move(
     })
 }
 
-pub fn move_piece(game: &Game, chess_move: piece::BasicMove) -> Result<Game, ChessError> {
+pub fn move_piece(game: &Game, chess_move: BasicMove) -> Result<Game, ChessError> {
     if let Ok(advanced_move) = resolve_advanced_move(game, chess_move) {
         advanced_move_piece(game, advanced_move)
     } else {
@@ -187,7 +173,7 @@ pub fn pice_moves_bitboard(game: &Game, target_piece: Square) -> Result<BitBoard
     }
 }
 
-pub fn basic_move_piece(game: &Game, chess_move: piece::BasicMove) -> Result<Game, ChessError> {
+pub fn basic_move_piece(game: &Game, chess_move: BasicMove) -> Result<Game, ChessError> {
     let (piece, move_set) = piece_basic_moves_bitboard(game, chess_move.piece_square)?;
     let target_mask = point(chess_move.target_square.row, chess_move.target_square.col);
     let piece_mask = point(chess_move.piece_square.row, chess_move.piece_square.col);
@@ -250,7 +236,7 @@ pub fn basic_move_piece(game: &Game, chess_move: piece::BasicMove) -> Result<Gam
 
 pub fn advanced_move_piece(
     game: &Game,
-    chess_move: piece::AdvancedMove,
+    chess_move: AdvancedMove,
 ) -> Result<Game, ChessError> {
     match chess_move {
         AdvancedMove::KingSideCastle => do_kingside_castling(game),

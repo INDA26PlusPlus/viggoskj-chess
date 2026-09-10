@@ -1,7 +1,8 @@
 use crate::bit_board::{BitBoard, displace, point};
-use crate::board::validate_square;
+use crate::board::{Square, validate_square};
 use crate::chess_error::ChessError;
 use crate::game::Color;
+use crate::moves::BasicMove;
 use crate::{bit_board, game};
 
 #[derive(Copy, Clone, PartialEq)]
@@ -22,7 +23,7 @@ impl PieceType {
             PieceType::Bishop => 'b',
             PieceType::Queen => 'q',
             PieceType::King => 'k',
-            PieceType::Knight => 'h',
+            PieceType::Knight => 'n',
         }
     }
 }
@@ -32,30 +33,6 @@ pub struct Piece {
     pub piece_color: game::Color,
     pub piece_type: PieceType,
     pub board_position: BitBoard,
-}
-
-#[derive(Copy, Clone)]
-pub struct BasicMove {
-    pub piece_square: Square,
-    pub target_square: Square,
-}
-
-#[derive(Copy, Clone)]
-pub enum AdvancedMove {
-    KingSideCastle,
-    QueenSideCastle,
-}
-
-#[derive(Copy, Clone)]
-pub enum Move {
-    Advanced { chess_move: AdvancedMove },
-    Basic { chess_move: BasicMove },
-}
-
-#[derive(Copy, Clone)]
-pub struct Square {
-    pub row: u32,
-    pub col: u32,
 }
 
 pub fn square_bitboard (square: Square) -> BitBoard
@@ -245,7 +222,7 @@ pub fn castling_board(full_mask: BitBoard, row: u32) -> BitBoard {
 }
 
 pub fn kingside_castling_move(full_mask: BitBoard, row: u32) -> BitBoard {
-    if full_mask & !(point(row, 5) | point(row, 4)) == full_mask {
+    if full_mask & !(point(row, 6) | point(row, 5)) == full_mask {
         point(row, 6)
     } else {
         0

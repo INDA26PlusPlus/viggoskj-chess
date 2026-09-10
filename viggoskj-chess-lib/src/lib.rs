@@ -3,6 +3,7 @@ pub mod board;
 pub mod chess_error;
 pub mod game;
 pub mod piece;
+pub mod moves;
 mod advanced_moves;
 
 pub fn create_game() -> game::Game {
