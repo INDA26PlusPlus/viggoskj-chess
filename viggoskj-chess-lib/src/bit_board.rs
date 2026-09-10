@@ -1,13 +1,5 @@
 pub type BitBoard = u64;
 
-pub fn union(a: BitBoard, b: BitBoard) -> BitBoard {
-    a | b
-}
-
-pub fn not(a: BitBoard) -> BitBoard {
-    !a
-}
-
 pub fn row(row: u32) -> BitBoard {
     (0..8).map(|x| row * 8 + x).fold(0, |y, x| 2u64.pow(x) + y)
 }

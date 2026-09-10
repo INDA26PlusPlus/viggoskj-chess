@@ -32,11 +32,7 @@ pub fn main() {
                 println!("{}", ms);
                 println!(
                     "{}",
-                    bitboard_string(
-                        viggoskj_chess_lib::game::piece_moves(&g, m.piece_square)
-                            .unwrap()
-                            .1
-                    )
+                    bitboard_string(viggoskj_chess_lib::game::pice_moves_bitboard(&g, m.piece_square).unwrap())
                 );
                 Err(v).unwrap()
             }

@@ -49,8 +49,6 @@ pub struct Board {
     pub black: ColorBoard,
 }
 
-
-
 impl ToString for Board {
     fn to_string(&self) -> String {
         (0..8)
@@ -126,23 +124,31 @@ fn white_default_pawn_board() -> BitBoard {
 }
 
 fn white_default_rook_board() -> BitBoard {
-    return bit_board::union(bit_board::point(0, 0), bit_board::point(0, 7));
+    white_default_left_rook_board() | white_default_right_rook_board()
+}
+
+pub(crate) fn white_default_left_rook_board() -> BitBoard {
+    bit_board::point(0, 0)
+}
+
+pub(crate) fn white_default_right_rook_board() -> BitBoard {
+    bit_board::point(0, 7)
 }
 
 fn white_default_knight_board() -> BitBoard {
-    return bit_board::union(bit_board::point(0, 1), bit_board::point(0, 6));
+    bit_board::point(0, 1) | bit_board::point(0, 6)
 }
 
 fn white_default_bishop_board() -> BitBoard {
-    return bit_board::union(bit_board::point(0, 2), bit_board::point(0, 5));
+    bit_board::point(0, 2) | bit_board::point(0, 5)
 }
 
 fn black_default_queen_board() -> BitBoard {
-    return bit_board::point(7, 3);
+    bit_board::point(7, 3)
 }
 
-fn black_default_king_board() -> BitBoard {
-    return bit_board::point(7, 4);
+pub(crate) fn black_default_king_board() -> BitBoard {
+    bit_board::point(7, 4)
 }
 
 fn black_default_pawn_board() -> BitBoard {
@@ -150,23 +156,31 @@ fn black_default_pawn_board() -> BitBoard {
 }
 
 fn black_default_rook_board() -> BitBoard {
-    return bit_board::union(bit_board::point(7, 0), bit_board::point(7, 7));
+    black_default_left_rook_board() | black_default_right_rook_board()
+}
+
+pub(crate) fn black_default_left_rook_board() -> BitBoard {
+    bit_board::point(7, 0)
+}
+
+pub(crate) fn black_default_right_rook_board() -> BitBoard {
+    bit_board::point(7, 7)
 }
 
 fn black_default_knight_board() -> BitBoard {
-    return bit_board::union(bit_board::point(7, 1), bit_board::point(7, 6));
+    bit_board::point(7, 1) | bit_board::point(7, 6)
 }
 
 fn black_default_bishop_board() -> BitBoard {
-    return bit_board::union(bit_board::point(7, 2), bit_board::point(7, 5));
+    bit_board::point(7, 2) | bit_board::point(7, 5)
 }
 
 fn white_default_queen_board() -> BitBoard {
-    return bit_board::point(0, 3);
+    bit_board::point(0, 3)
 }
 
-fn white_default_king_board() -> BitBoard {
-    return bit_board::point(0, 4);
+pub(crate) fn white_default_king_board() -> BitBoard {
+    bit_board::point(0, 4)
 }
 
 pub fn create_start_board() -> Board {

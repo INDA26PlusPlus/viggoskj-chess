@@ -1,6 +1,4 @@
-use std::ptr::read;
-
-use crate::bit_board::{BitBoard, displace};
+use crate::bit_board::{BitBoard, displace, point};
 use crate::board::validate_square;
 use crate::chess_error::ChessError;
 use crate::game::Color;
@@ -37,9 +35,21 @@ pub struct Piece {
 }
 
 #[derive(Copy, Clone)]
-pub struct Move {
+pub struct BasicMove {
     pub piece_square: Square,
     pub target_square: Square,
+}
+
+#[derive(Copy, Clone)]
+pub enum AdvancedMove {
+    KingSideCastle,
+    QueenSideCastle,
+}
+
+#[derive(Copy, Clone)]
+pub enum Move {
+    Advanced { chess_move: AdvancedMove },
+    Basic { chess_move: BasicMove },
 }
 
 #[derive(Copy, Clone)]
@@ -48,12 +58,17 @@ pub struct Square {
     pub col: u32,
 }
 
-pub fn parse_move(move_str: &str) -> Result<Move, ChessError> {
+pub fn square_bitboard (square: Square) -> BitBoard
+{
+    point(square.row, square.col)
+}
+
+pub fn parse_move(move_str: &str) -> Result<BasicMove, ChessError> {
     if move_str.len() != 4 {
         return Err(ChessError::InvalidMoveString);
     } else {
         let (piece_str, target_str) = move_str.split_at(2);
-        return Ok(Move {
+        return Ok(BasicMove {
             target_square: parse_square(target_str)?,
             piece_square: parse_square(piece_str)?,
         });
@@ -85,7 +100,7 @@ fn parse_row(c: char) -> Result<u32, ChessError> {
     }
 }
 
-pub fn validate_move(chess_move: Move) -> Result<(), ChessError> {
+pub fn validate_move(chess_move: BasicMove) -> Result<(), ChessError> {
     validate_square(chess_move.piece_square.row, chess_move.piece_square.col)?;
     validate_square(chess_move.target_square.row, chess_move.target_square.col)?;
     Ok(())
@@ -223,4 +238,24 @@ fn pawn_double_step_board(
     now = single_move_bit_board(forward, 0, now, self_mask) & !(attack_mask);
     now = single_move_bit_board(forward, 0, now, self_mask);
     return now & (!piece_placement);
+}
+
+pub fn castling_board(full_mask: BitBoard, row: u32) -> BitBoard {
+    kingside_castling_move(full_mask, row) | queenside_castling_move(full_mask, row)
+}
+
+pub fn kingside_castling_move(full_mask: BitBoard, row: u32) -> BitBoard {
+    if full_mask & !(point(row, 5) | point(row, 4)) == full_mask {
+        point(row, 6)
+    } else {
+        0
+    }
+}
+
+pub fn queenside_castling_move(full_mask: BitBoard, row: u32) -> BitBoard {
+    if full_mask & !(point(row, 1) | point(row, 2) | point(row, 3)) == full_mask {
+        point(row, 2)
+    } else {
+        0
+    }
 }
