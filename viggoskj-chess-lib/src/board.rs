@@ -1,8 +1,10 @@
 use crate::bitboard::{BitBoard, point};
 use crate::chess_error::ChessError;
-use crate::piece::{Piece, PieceType};
-use crate::{bitboard, piece};
+use crate::game::Color;
 use crate::instantiation;
+use crate::moves::BasicMove;
+use crate::piece::{Piece, PieceType, if_piece_type};
+use crate::{bitboard, piece};
 
 #[derive(Copy, Clone)]
 pub struct ColorBoard {
@@ -104,11 +106,9 @@ impl Board {
     }
 }
 
-pub fn square_bitboard (square: Square) -> BitBoard
-{
+pub fn square_bitboard(square: Square) -> BitBoard {
     point(square.row, square.col)
 }
-
 
 pub fn create_start_board() -> Board {
     let board: Board = Board {
@@ -124,5 +124,100 @@ pub fn validate_square(row: u32, col: u32) -> Result<(), ChessError> {
         Err(ChessError::InvalidSquare)
     } else {
         Ok(())
+    }
+}
+
+pub fn piece_basic_moves_bitboard(
+    board: &Board,
+    piece_square: Square,
+    playing: Color,
+) -> Result<(Piece, BitBoard), ChessError> {
+    let piece = match board.get_pice(piece_square.row, piece_square.col) {
+        Some(t) => t,
+        _ => {
+            return Err(ChessError::InvalidMove {
+                reason: crate::chess_error::InvalidMoveReason::NoTargetPiece,
+            });
+        }
+    };
+
+    let (playing, waiting) = select_playing_board(board, playing);
+
+    let moves = piece::piece_basic_move_bit_board(piece, playing.mask(), waiting.mask());
+
+    Ok((piece, moves))
+}
+
+pub fn basic_move_piece(
+    board: &Board,
+    chess_move: BasicMove,
+    playing: Color,
+) -> Result<Board, ChessError> {
+    let (piece, move_set) = piece_basic_moves_bitboard(board, chess_move.piece_square, playing)?;
+    let target_mask = point(chess_move.target_square.row, chess_move.target_square.col);
+    let piece_mask = point(chess_move.piece_square.row, chess_move.piece_square.col);
+
+    if piece.piece_color != playing {
+        return Err(ChessError::InvalidMove {
+            reason: crate::chess_error::InvalidMoveReason::WrongColor,
+        });
+    }
+
+    if (move_set & target_mask) == 0 {
+        return Err(ChessError::InvalidMove {
+            reason: crate::chess_error::InvalidMoveReason::NotAMoveOption,
+        });
+    }
+
+    let (playing_board, waiting_board) = select_playing_board(board, playing);
+
+    let new_wating_board = ColorBoard {
+        pawns: waiting_board.pawns & !target_mask,
+        knights: waiting_board.knights & !target_mask,
+        bishops: waiting_board.bishops & !target_mask,
+        rooks: waiting_board.rooks & !target_mask,
+        queens: waiting_board.queens & !target_mask,
+        kings: waiting_board.kings & !target_mask,
+    };
+
+    let new_playing_board = ColorBoard {
+        bishops: playing_board.bishops & (!piece.board_position)
+            | if_piece_type(piece.piece_type, PieceType::Bishop, target_mask),
+        kings: playing_board.kings & (!piece.board_position)
+            | if_piece_type(piece.piece_type, PieceType::King, target_mask),
+        knights: playing_board.knights & (!piece.board_position)
+            | if_piece_type(piece.piece_type, PieceType::Knight, target_mask),
+        pawns: playing_board.pawns & (!piece.board_position)
+            | if_piece_type(piece.piece_type, PieceType::Pawn, target_mask),
+        queens: playing_board.queens & (!piece.board_position)
+            | if_piece_type(piece.piece_type, PieceType::Queen, target_mask),
+        rooks: playing_board.rooks & (!piece.board_position)
+            | if_piece_type(piece.piece_type, PieceType::Rook, target_mask),
+    };
+
+    Ok(new_board(new_playing_board, new_wating_board, playing))
+}
+
+pub fn select_playing_board(board: &Board, color: Color) -> (ColorBoard, ColorBoard) {
+    match color {
+        Color::Black => (board.black, board.white),
+        Color::White => (board.white, board.black),
+    }
+}
+
+pub fn new_board(
+    new_playing_board: ColorBoard,
+    new_waiting_board: ColorBoard,
+    playing: Color,
+) -> Board {
+    Board {
+        white: match playing {
+            Color::Black => new_waiting_board,
+            Color::White => new_playing_board,
+        },
+        black: match playing {
+            Color::White => new_waiting_board,
+            Color::Black => new_playing_board,
+        },
     }
 }

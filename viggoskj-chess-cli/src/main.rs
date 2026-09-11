@@ -1,7 +1,9 @@
 use std::{panic::panic_any, vec};
 
 use viggoskj_chess_lib::{
-    bitboard::{self, BitBoard, bitboard_string, displace}, game, parsing, piece::{self, piece_basic_move_bit_board},
+    bitboard::{self, BitBoard, bitboard_string, displace},
+    game, parsing,
+    piece::{self, piece_basic_move_bit_board},
 };
 
 pub fn main() {
@@ -16,15 +18,10 @@ pub fn main() {
     ];
 
     let moves_with_promotion = vec![
-        "a2a4", "h7h5", "a4a5", "h5h4", "a5a6", "h4h3", "a6b7", "h3g2", "b7a8q",
-    ];
-
-    let moves_with_black_king_castle = vec![
-        "e2e4", "e7e6", "g1f3", "g8f6", "d2d3", "f8e7", "b1c3", "e8g8",
+        "a2a4", "h7h6", "a4a5", "h6h5", "a5a6", "h5h4", "a6b7", "h4h3", "b7a8n",
     ];
 
     play_game(moves_with_queen_castle);
-    play_game(moves_with_black_king_castle);
     play_game(moves_with_promotion);
 }
 
@@ -42,12 +39,39 @@ fn play_game(moves: std::vec::Vec<&str>) {
             }
             Err(v) => {
                 println!("{}", ms);
-                println!(
-                    "{}",
-                    bitboard_string(
-                        viggoskj_chess_lib::game::pice_moves_bitboard(&g, m.piece_square).unwrap()
-                    )
-                );
+                match m {
+                    viggoskj_chess_lib::moves::Move::Basic { chess_move } => {
+                        println!(
+                            "{}",
+                            bitboard_string(
+                                viggoskj_chess_lib::game::pice_moves_bitboard(&g, chess_move.piece_square)
+                                    .unwrap()
+                            )
+                        );
+                    }
+                    viggoskj_chess_lib::moves::Move::Advanced { chess_move } => match chess_move {
+                        viggoskj_chess_lib::moves::AdvancedMove::KingSideCastle => {
+                            println!("kingside castle")
+                        }
+                        viggoskj_chess_lib::moves::AdvancedMove::Promotion {
+                            piece_type,
+                            basic_move,
+                        } => {
+                            println!(
+                                "{}",
+                                bitboard_string(
+                                    viggoskj_chess_lib::game::pice_moves_bitboard(
+                                        &g,
+                                        basic_move.piece_square
+                                    )
+                                    .unwrap()
+                                )
+                            );
+                            println!("{}", piece_type.to_char());
+                        }
+                        viggoskj_chess_lib::moves::AdvancedMove::QueenSideCastle => println!("queenside castle")
+                    },
+                }
                 Err(v).unwrap()
             }
         };

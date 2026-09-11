@@ -1,16 +1,17 @@
+use crate::board;
 use crate::chess_error::ChessError;
 use crate::moves;
-use crate::board;
+use crate::piece::PieceType;
 
-pub fn parse_move(move_str: &str) -> Result<moves::BasicMove, ChessError> {
-    if move_str.len() != 4 {
-        return Err(ChessError::InvalidMoveString);
-    } else {
-        let (piece_str, target_str) = move_str.split_at(2);
-        return Ok(moves::BasicMove {
-            target_square: parse_square(target_str)?,
-            piece_square: parse_square(piece_str)?,
-        });
+pub fn parse_move(move_str: &str) -> Result<moves::Move, ChessError> {
+    match move_str.len() {
+        4 => Ok(moves::Move::Basic {
+            chess_move: parse_basic_move(move_str)?,
+        }),
+        5 => Ok(moves::Move::Advanced {
+            chess_move: parse_promotion_move(move_str)?,
+        }),
+        _ => Err(ChessError::InvalidMoveString),
     }
 }
 
@@ -22,6 +23,33 @@ pub fn parse_square(move_str: &str) -> Result<board::Square, ChessError> {
             col: parse_col(move_str.chars().nth(0).unwrap())?,
             row: parse_row(move_str.chars().nth(1).unwrap())?,
         });
+    }
+}
+fn parse_basic_move(move_str: &str) -> Result<moves::BasicMove, ChessError> {
+    let (piece_str, target_str) = move_str.split_at(2);
+    return Ok(moves::BasicMove {
+        target_square: parse_square(target_str)?,
+        piece_square: parse_square(piece_str)?,
+    });
+}
+
+fn parse_promotion_move(move_str: &str) -> Result<moves::AdvancedMove, ChessError> {
+    let (basic_str, promotion_type) = move_str.split_at(4);
+    return Ok(moves::AdvancedMove::Promotion {
+        piece_type: char_to_piece_type(promotion_type.chars().nth(0).unwrap())?,
+        basic_move: parse_basic_move(basic_str)?,
+    });
+}
+
+fn char_to_piece_type(c: char) -> Result<PieceType, ChessError> {
+    match c {
+        'p' => Ok(PieceType::Pawn),
+        'r' => Ok(PieceType::Rook),
+        'b' => Ok(PieceType::Bishop),
+        'q' => Ok(PieceType::Queen),
+        'k' => Ok(PieceType::King),
+        'n' => Ok(PieceType::Knight),
+        _ => Err(ChessError::InvalidMoveString),
     }
 }
 

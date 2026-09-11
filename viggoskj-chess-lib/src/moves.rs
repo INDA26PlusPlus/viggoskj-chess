@@ -1,4 +1,5 @@
 use crate::board::Square;
+use crate::piece::PieceType;
 
 #[derive(Copy, Clone)]
 pub struct BasicMove {
@@ -10,6 +11,10 @@ pub struct BasicMove {
 pub enum AdvancedMove {
     KingSideCastle,
     QueenSideCastle,
+    Promotion {
+        piece_type: PieceType,
+        basic_move: BasicMove,
+    },
 }
 
 #[derive(Copy, Clone)]

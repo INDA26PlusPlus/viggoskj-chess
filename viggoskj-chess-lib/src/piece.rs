@@ -181,3 +181,15 @@ pub fn queenside_castling_move(full_mask: BitBoard, row: u32) -> BitBoard {
         0
     }
 }
+
+pub fn if_piece_type(
+    piece_type: PieceType,
+    required_piece_type: PieceType,
+    board: BitBoard,
+) -> BitBoard {
+    if piece_type == required_piece_type {
+        board
+    } else {
+        0
+    }
+}
