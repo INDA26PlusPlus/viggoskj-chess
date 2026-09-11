@@ -1,9 +1,7 @@
 use std::{panic::panic_any, vec};
 
 use viggoskj_chess_lib::{
-    bit_board::{self, BitBoard, bitboard_string, displace},
-    game,
-    piece::{self, piece_basic_move_bit_board},
+    bitboard::{self, BitBoard, bitboard_string, displace}, game, parsing, piece::{self, piece_basic_move_bit_board},
 };
 
 pub fn main() {
@@ -27,13 +25,14 @@ pub fn main() {
 
     play_game(moves_with_queen_castle);
     play_game(moves_with_black_king_castle);
+    play_game(moves_with_promotion);
 }
 
 fn play_game(moves: std::vec::Vec<&str>) {
     let mut g = viggoskj_chess_lib::create_game();
 
     for ms in moves {
-        let m = piece::parse_move(ms).unwrap();
+        let m = parsing::parse_move(ms).unwrap();
 
         let r = viggoskj_chess_lib::game::move_piece(&g, m);
         match r {

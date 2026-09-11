@@ -1,5 +1,5 @@
 use crate::{
-    bit_board::point,
+    bitboard::point,
     board::{Board, ColorBoard},
     chess_error::ChessError,
     game::{
@@ -7,6 +7,32 @@ use crate::{
         Game, new_board, playing_board,
     },
 };
+
+pub fn can_try_queenside_castle(game: &Game) -> bool {
+    if game.turn == Color::White {
+        if !game.white_king_moved && !game.white_rook_left_moved {
+            return true;
+        }
+    } else if game.turn == Color::Black {
+        if !game.black_king_moved && !game.black_rook_left_moved {
+            return true;
+        }
+    }
+    return false;
+}
+
+pub fn can_try_kingside_castle(game: &Game) -> bool {
+    if game.turn == Color::White {
+        if !game.white_king_moved && !game.white_rook_right_moved {
+            return true;
+        }
+    } else if game.turn == Color::Black {
+        if !game.black_king_moved && !game.black_rook_right_moved {
+            return true;
+        }
+    }
+    return false;
+}
 
 pub fn do_kingside_castling(game: &Game) -> Result<Game, ChessError> {
     let king_row = king_row(game);

@@ -1,8 +1,17 @@
-use std::f32::consts::E;
-
 use crate::{
-    advanced_moves::{do_kingside_castling, do_queenside_castling}, bit_board::{self, BitBoard, bitboard_string, point}, board::{self, Board, ColorBoard, Square, validate_square}, chess_error::ChessError, game::Color::White, moves::{AdvancedMove, BasicMove}, piece::{
-        Piece, PieceType, castling_board, kingside_castling_move, piece_basic_move_bit_board, queenside_castling_move, square_bitboard,
+    advanced_moves::{
+        can_try_kingside_castle, can_try_queenside_castle, do_kingside_castling,
+        do_queenside_castling,
+    },
+    bitboard::{self, BitBoard, bitboard_string, point},
+    board::{self, Board, ColorBoard, Square, validate_square},
+    chess_error::ChessError,
+    game::Color::White,
+    instantiation,
+    moves::{AdvancedMove, BasicMove},
+    piece::{
+        Piece, PieceType, castling_board, kingside_castling_move, piece_basic_move_bit_board,
+        queenside_castling_move,
     },
 };
 
@@ -58,23 +67,15 @@ pub fn piece_advanced_moves_bitboard(
         }
     };
 
-    let self_mask = match game.turn {
-        Color::Black => game.board.black.mask(),
-        Color::White => game.board.white.mask(),
-    };
     let mut moves = 0;
 
     if piece.piece_type == PieceType::King {
-        if game.turn == Color::White {
-            if !game.white_king_moved && !game.white_rook_left_moved && !game.white_rook_right_moved
-            {
-                moves |= castling_board(self_mask, 0);
-            }
-        } else if game.turn == Color::Black {
-            if !game.black_king_moved && !game.black_rook_left_moved && !game.black_rook_right_moved
-            {
-                moves |= castling_board(self_mask, 7);
-            }
+        if can_try_kingside_castle(game) {
+            moves |= kingside_castling_move(game.board.mask(),  piece_square.row);
+        }
+
+        if can_try_queenside_castle(game) {
+            moves |= queenside_castling_move(game.board.mask(),  piece_square.row);
         }
     }
 
@@ -96,50 +97,22 @@ pub fn resolve_advanced_move(
         }
     };
 
-    let self_mask = match game.turn {
-        Color::Black => game.board.black.mask(),
-        Color::White => game.board.white.mask(),
-    };
-
-    let attack_mask = match game.turn {
-        Color::Black => game.board.white.mask(),
-        Color::White => game.board.black.mask(),
-    };
-
     if piece.piece_type == PieceType::King {
-        if game.turn == Color::White {
-            if !game.white_king_moved && !game.white_rook_left_moved && !game.white_rook_right_moved
+        if can_try_kingside_castle(game) {
+            if board::square_bitboard(chess_move.target_square)
+                & kingside_castling_move(game.board.mask(), piece_square.row)
+                > 0
             {
-                if square_bitboard(chess_move.target_square)
-                    & kingside_castling_move(game.board.mask(), 0)
-                    > 0
-                {
-                    return Ok(AdvancedMove::KingSideCastle);
-                }
-
-                if square_bitboard(chess_move.target_square)
-                    & queenside_castling_move(game.board.mask(), 0)
-                    > 0
-                {
-                    return Ok(AdvancedMove::QueenSideCastle);
-                }
+                return Ok(AdvancedMove::KingSideCastle);
             }
-        } else if game.turn == Color::Black {
-            if !game.black_king_moved && !game.black_rook_left_moved && !game.black_rook_right_moved
-            {
-                if square_bitboard(chess_move.target_square)
-                    & kingside_castling_move(game.board.mask(), 7)
-                    > 0
-                {
-                    return Ok(AdvancedMove::KingSideCastle);
-                }
+        }
 
-                if square_bitboard(chess_move.target_square)
-                    & queenside_castling_move(game.board.mask(), 7)
-                    > 0
-                {
-                    return Ok(AdvancedMove::QueenSideCastle);
-                }
+        if can_try_queenside_castle(game) {
+            if board::square_bitboard(chess_move.target_square)
+                & queenside_castling_move(game.board.mask(),  piece_square.row)
+                > 0
+            {
+                return Ok(AdvancedMove::QueenSideCastle);
             }
         }
     }
@@ -218,26 +191,23 @@ pub fn basic_move_piece(game: &Game, chess_move: BasicMove) -> Result<Game, Ches
 
     Ok(Game {
         black_rook_left_moved: game.black_rook_left_moved
-            | piece_moved(board::black_default_left_rook_board(), piece_mask),
+            | piece_moved(instantiation::black_default_left_rook_board(), piece_mask),
         black_rook_right_moved: game.black_rook_right_moved
-            | piece_moved(board::black_default_right_rook_board(), piece_mask),
+            | piece_moved(instantiation::black_default_right_rook_board(), piece_mask),
         black_king_moved: game.black_king_moved
-            | piece_moved(board::black_default_king_board(), piece_mask),
+            | piece_moved(instantiation::black_default_king_board(), piece_mask),
         white_rook_left_moved: game.white_rook_left_moved
-            | piece_moved(board::white_default_left_rook_board(), piece_mask),
+            | piece_moved(instantiation::white_default_left_rook_board(), piece_mask),
         white_rook_right_moved: game.white_rook_right_moved
-            | piece_moved(board::white_default_right_rook_board(), piece_mask),
+            | piece_moved(instantiation::white_default_right_rook_board(), piece_mask),
         white_king_moved: game.white_king_moved
-            | piece_moved(board::white_default_king_board(), piece_mask),
+            | piece_moved(instantiation::white_default_king_board(), piece_mask),
         turn: game.turn.other(),
         board: new_board(game, new_playing_board, new_wating_board),
     })
 }
 
-pub fn advanced_move_piece(
-    game: &Game,
-    chess_move: AdvancedMove,
-) -> Result<Game, ChessError> {
+pub fn advanced_move_piece(game: &Game, chess_move: AdvancedMove) -> Result<Game, ChessError> {
     match chess_move {
         AdvancedMove::KingSideCastle => do_kingside_castling(game),
         AdvancedMove::QueenSideCastle => do_queenside_castling(game),
@@ -284,7 +254,11 @@ pub fn playing_board(game: &Game) -> (ColorBoard, ColorBoard) {
     }
 }
 
-pub fn new_board(game: &Game, new_playing_board: ColorBoard, new_waiting_board: ColorBoard) -> Board {
+pub fn new_board(
+    game: &Game,
+    new_playing_board: ColorBoard,
+    new_waiting_board: ColorBoard,
+) -> Board {
     Board {
         white: match game.turn {
             Color::Black => new_waiting_board,

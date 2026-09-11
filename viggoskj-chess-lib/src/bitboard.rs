@@ -42,14 +42,6 @@ pub fn at(board: BitBoard, row: u32, col: u32) -> bool {
     (board & point(row, col)) > 0
 }
 
-pub fn empty() -> BitBoard {
-    0
-}
-
-pub fn full() -> BitBoard {
-    BitBoard::MAX
-}
-
 pub fn bitboard_string(board: BitBoard) -> String {
     (0..8).rev()
         .map(|row| (0..8).map(move |col| at(board, row, col)))

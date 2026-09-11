@@ -1,7 +1,8 @@
-use crate::bit_board::BitBoard;
+use crate::bitboard::{BitBoard, point};
 use crate::chess_error::ChessError;
 use crate::piece::{Piece, PieceType};
-use crate::{bit_board, piece};
+use crate::{bitboard, piece};
+use crate::instantiation;
 
 #[derive(Copy, Clone)]
 pub struct ColorBoard {
@@ -13,37 +14,6 @@ pub struct ColorBoard {
     pub kings: BitBoard,
 }
 
-impl ColorBoard {
-    pub fn mask(&self) -> BitBoard {
-        self.pawns | self.knights | self.bishops | self.rooks | self.queens | self.kings
-    }
-}
-
-impl ColorBoard {
-    fn at(&self, row: u32, col: u32) -> Option<piece::PieceType> {
-        if bit_board::at(self.pawns, row, col) {
-            return Some(piece::PieceType::Pawn);
-        }
-        if bit_board::at(self.knights, row, col) {
-            return Some(piece::PieceType::Knight);
-        }
-        if bit_board::at(self.bishops, row, col) {
-            return Some(piece::PieceType::Bishop);
-        }
-        if bit_board::at(self.rooks, row, col) {
-            return Some(piece::PieceType::Rook);
-        }
-        if bit_board::at(self.queens, row, col) {
-            return Some(piece::PieceType::Queen);
-        }
-        if bit_board::at(self.kings, row, col) {
-            return Some(piece::PieceType::King);
-        }
-
-        None
-    }
-}
-
 pub struct Board {
     pub white: ColorBoard,
     pub black: ColorBoard,
@@ -53,6 +23,37 @@ pub struct Board {
 pub struct Square {
     pub row: u32,
     pub col: u32,
+}
+
+impl ColorBoard {
+    pub fn mask(&self) -> BitBoard {
+        self.pawns | self.knights | self.bishops | self.rooks | self.queens | self.kings
+    }
+}
+
+impl ColorBoard {
+    fn at(&self, row: u32, col: u32) -> Option<piece::PieceType> {
+        if bitboard::at(self.pawns, row, col) {
+            return Some(piece::PieceType::Pawn);
+        }
+        if bitboard::at(self.knights, row, col) {
+            return Some(piece::PieceType::Knight);
+        }
+        if bitboard::at(self.bishops, row, col) {
+            return Some(piece::PieceType::Bishop);
+        }
+        if bitboard::at(self.rooks, row, col) {
+            return Some(piece::PieceType::Rook);
+        }
+        if bitboard::at(self.queens, row, col) {
+            return Some(piece::PieceType::Queen);
+        }
+        if bitboard::at(self.kings, row, col) {
+            return Some(piece::PieceType::King);
+        }
+
+        None
+    }
 }
 
 impl ToString for Board {
@@ -83,7 +84,7 @@ impl Board {
             return Some(Piece {
                 piece_type: piece_type,
                 piece_color: crate::game::Color::White,
-                board_position: bit_board::point(row, col),
+                board_position: bitboard::point(row, col),
             });
         }
 
@@ -91,7 +92,7 @@ impl Board {
             return Some(Piece {
                 piece_type: piece_type,
                 piece_color: crate::game::Color::Black,
-                board_position: bit_board::point(row, col),
+                board_position: bitboard::point(row, col),
             });
         }
 
@@ -103,96 +104,16 @@ impl Board {
     }
 }
 
-fn black_default_board() -> ColorBoard {
-    ColorBoard {
-        pawns: black_default_pawn_board(),
-        rooks: black_default_rook_board(),
-        knights: black_default_knight_board(),
-        bishops: black_default_bishop_board(),
-        queens: black_default_queen_board(),
-        kings: black_default_king_board(),
-    }
+pub fn square_bitboard (square: Square) -> BitBoard
+{
+    point(square.row, square.col)
 }
 
-fn white_default_board() -> ColorBoard {
-    ColorBoard {
-        pawns: white_default_pawn_board(),
-        rooks: white_default_rook_board(),
-        knights: white_default_knight_board(),
-        bishops: white_default_bishop_board(),
-        queens: white_default_queen_board(),
-        kings: white_default_king_board(),
-    }
-}
-
-fn white_default_pawn_board() -> BitBoard {
-    bit_board::row(1)
-}
-
-fn white_default_rook_board() -> BitBoard {
-    white_default_left_rook_board() | white_default_right_rook_board()
-}
-
-pub(crate) fn white_default_left_rook_board() -> BitBoard {
-    bit_board::point(0, 0)
-}
-
-pub(crate) fn white_default_right_rook_board() -> BitBoard {
-    bit_board::point(0, 7)
-}
-
-fn white_default_knight_board() -> BitBoard {
-    bit_board::point(0, 1) | bit_board::point(0, 6)
-}
-
-fn white_default_bishop_board() -> BitBoard {
-    bit_board::point(0, 2) | bit_board::point(0, 5)
-}
-
-fn black_default_queen_board() -> BitBoard {
-    bit_board::point(7, 3)
-}
-
-pub(crate) fn black_default_king_board() -> BitBoard {
-    bit_board::point(7, 4)
-}
-
-fn black_default_pawn_board() -> BitBoard {
-    bit_board::row(6)
-}
-
-fn black_default_rook_board() -> BitBoard {
-    black_default_left_rook_board() | black_default_right_rook_board()
-}
-
-pub(crate) fn black_default_left_rook_board() -> BitBoard {
-    bit_board::point(7, 0)
-}
-
-pub(crate) fn black_default_right_rook_board() -> BitBoard {
-    bit_board::point(7, 7)
-}
-
-fn black_default_knight_board() -> BitBoard {
-    bit_board::point(7, 1) | bit_board::point(7, 6)
-}
-
-fn black_default_bishop_board() -> BitBoard {
-    bit_board::point(7, 2) | bit_board::point(7, 5)
-}
-
-fn white_default_queen_board() -> BitBoard {
-    bit_board::point(0, 3)
-}
-
-pub(crate) fn white_default_king_board() -> BitBoard {
-    bit_board::point(0, 4)
-}
 
 pub fn create_start_board() -> Board {
-    let board = Board {
-        white: white_default_board(),
-        black: black_default_board(),
+    let board: Board = Board {
+        white: instantiation::white_default_board(),
+        black: instantiation::black_default_board(),
     };
 
     return board;

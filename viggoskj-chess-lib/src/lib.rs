@@ -1,10 +1,12 @@
-pub mod bit_board;
+pub mod bitboard;
 pub mod board;
 pub mod chess_error;
 pub mod game;
 pub mod piece;
 pub mod moves;
+pub mod parsing;
 mod advanced_moves;
+mod instantiation;
 
 pub fn create_game() -> game::Game {
     let game: game::Game = game::Game {
