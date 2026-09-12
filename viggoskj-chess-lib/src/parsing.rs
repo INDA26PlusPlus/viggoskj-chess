@@ -1,7 +1,9 @@
-use crate::board;
-use crate::chess_error::ChessError;
-use crate::moves;
+use crate::board::Board;
+use crate::chess_error::{self, ChessError};
+use crate::game::Color;
 use crate::piece::PieceType;
+use crate::{bitboard, board};
+use crate::{moves, piece};
 
 pub fn parse_move(move_str: &str) -> Result<moves::Move, ChessError> {
     match move_str.len() {
@@ -25,6 +27,54 @@ pub fn parse_square(move_str: &str) -> Result<board::Square, ChessError> {
         });
     }
 }
+
+pub fn parse_board(board_str: String) -> Result<board::Board, ChessError> {
+    Ok(Board {
+        black: board::ColorBoard {
+            pawns: bitboard_from_str(&board_str, PieceType::Pawn, Color::Black)?,
+            knights: bitboard_from_str(&board_str, PieceType::Knight, Color::Black)?,
+            bishops: bitboard_from_str(&board_str, PieceType::Bishop, Color::Black)?,
+            rooks: bitboard_from_str(&board_str, PieceType::Rook, Color::Black)?,
+            queens: bitboard_from_str(&board_str, PieceType::Queen, Color::Black)?,
+            kings: bitboard_from_str(&board_str, PieceType::King, Color::Black)?,
+        },
+        white: board::ColorBoard {
+            pawns: bitboard_from_str(&board_str, PieceType::Pawn, Color::White)?,
+            knights: bitboard_from_str(&board_str, PieceType::Knight, Color::White)?,
+            bishops: bitboard_from_str(&board_str, PieceType::Bishop, Color::White)?,
+            rooks: bitboard_from_str(&board_str, PieceType::Rook, Color::White)?,
+            queens: bitboard_from_str(&board_str, PieceType::Queen, Color::White)?,
+            kings: bitboard_from_str(&board_str, PieceType::King, Color::White)?,
+        },
+    })
+}
+
+fn bitboard_from_str(
+    string: &str,
+    piece_type: PieceType,
+    color: Color,
+) -> Result<bitboard::Bitboard, ChessError> {
+    let cleaned = string.replace('\n', "");
+
+    if cleaned.len() != 64 {
+        return Err(ChessError::InvalidBoardString);
+    }
+
+    let search_char = piece::Piece {
+        board_position: 0,
+        piece_color: color,
+        piece_type: piece_type,
+    }
+    .to_char();
+
+    let board = cleaned
+        .chars()
+        .map(|c| if c == search_char { 1 } else { 0 })
+        .fold(0u64, |acc, bit| (acc << 1) | bit);
+
+    return Ok(bitboard::horizontal_flip(board));
+}
+
 fn parse_basic_move(move_str: &str) -> Result<moves::BasicMove, ChessError> {
     let (piece_str, target_str) = move_str.split_at(2);
     return Ok(moves::BasicMove {

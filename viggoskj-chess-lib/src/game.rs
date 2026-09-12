@@ -16,6 +16,7 @@ use crate::{
     piece::{Piece, PieceType},
 };
 
+#[derive(Debug, PartialEq)]
 pub struct Game {
     pub(crate) white_rook_left_moved: bool,
     pub(crate) white_rook_right_moved: bool,
@@ -200,7 +201,7 @@ pub fn play_advanced_move(game: &Game, chess_move: AdvancedMove) -> Result<Game,
 
 pub struct MoveResult {}
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Color {
     Black,
     White,

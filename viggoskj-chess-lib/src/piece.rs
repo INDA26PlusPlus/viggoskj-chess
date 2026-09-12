@@ -36,6 +36,15 @@ impl PieceType {
     }
 }
 
+impl Piece {
+    pub fn to_char(&self) -> char {
+        match self.piece_color {
+          Color::Black => self.piece_type.to_char().to_ascii_uppercase(),
+          Color::White => self.piece_type.to_char(),
+        }
+    }
+}
+
 
 pub fn if_piece_type(
     piece_type: PieceType,

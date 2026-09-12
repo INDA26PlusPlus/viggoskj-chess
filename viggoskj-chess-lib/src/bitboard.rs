@@ -14,6 +14,20 @@ pub fn point(row: u32, col: u32) -> Bitboard {
     2u64.pow(row * 8 + col)
 }
 
+pub fn horizontal_flip(board: Bitboard) -> Bitboard {
+    let mut result = 0;
+
+    for row in 0..8 {
+        for col in 0..8 {
+            if board & point(row, col) != 0 {
+                result |= point(row, 7 - col);
+            }
+        }
+    }
+
+    result
+}
+
 pub fn displace(board: Bitboard, rows: i32, cols: i32) -> Bitboard {
     let mut result = board;
 

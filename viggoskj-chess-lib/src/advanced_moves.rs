@@ -157,6 +157,15 @@ pub fn do_promotion(
 ) -> Result<Game, ChessError> {
     let (new_board, _) = board::do_basic_move(&game.board, basic_move, game.turn)?;
 
+    match promotion_type {
+        PieceType::King | PieceType::Pawn => {
+            return Err(ChessError::InvalidMove {
+                reason: crate::chess_error::InvalidMoveReason::InvalidPromotionPiece,
+            });
+        }
+        _ => (),
+    }
+
     let (playing_board, waiting_board) = board::select_playing_board(&new_board, game.turn);
 
     let new_playing = ColorBoard {

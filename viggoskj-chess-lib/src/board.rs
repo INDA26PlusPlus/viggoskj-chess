@@ -6,7 +6,7 @@ use crate::piece::{Piece, PieceType, if_piece_type};
 use crate::{bitboard, piece};
 use crate::{instantiation, moves};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct ColorBoard {
     pub pawns: Bitboard,
     pub knights: Bitboard,
@@ -16,6 +16,7 @@ pub struct ColorBoard {
     pub kings: Bitboard,
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Board {
     pub white: ColorBoard,
     pub black: ColorBoard,
@@ -57,7 +58,6 @@ impl ColorBoard {
         None
     }
 }
-
 impl ToString for Board {
     fn to_string(&self) -> String {
         (0..8)

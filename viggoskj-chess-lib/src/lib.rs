@@ -5,6 +5,7 @@ pub mod game;
 pub mod piece;
 pub mod moves;
 pub mod parsing;
+mod tests;
 mod advanced_moves;
 mod instantiation;
 

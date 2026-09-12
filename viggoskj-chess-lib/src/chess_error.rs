@@ -1,15 +1,16 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ChessError {
     InvalidSquare,
-    InvalidMove {reason: InvalidMoveReason},
+    InvalidMove { reason: InvalidMoveReason },
     InvalidMoveString,
+    InvalidBoardString,
 }
 
-#[derive(Debug)]
-pub enum InvalidMoveReason
-{
+#[derive(Debug, PartialEq )]
+pub enum InvalidMoveReason {
     Generic,
     NotAMoveOption,
     NoTargetPiece,
     WrongColor,
+    InvalidPromotionPiece,
 }
