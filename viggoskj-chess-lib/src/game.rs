@@ -12,7 +12,7 @@ use crate::{
     chess_error::ChessError,
     game::Color::White,
     instantiation,
-    moves::{AdvancedMove, BasicMove, Move},
+    moves::{self, AdvancedMove, BasicMove, Move},
     piece::{Piece, PieceType},
 };
 
@@ -67,6 +67,23 @@ pub fn resolve_advanced_move(
         }
     }
 
+    if piece.piece_type == PieceType::Pawn {
+        let forward = match piece.piece_color {
+            Color::White => 1,
+            Color::Black => -1,
+        };
+
+        let en_pessant_moves =
+            moves::pawn_capture_bitboard(piece.board_position, u64::max_value(), forward)
+                & wating_en_pessant_pawns(game);
+
+        if en_pessant_moves & square_bitboard(chess_move.target_square) != 0 {
+            return Ok(AdvancedMove::EnPessant {
+                basic_move: chess_move,
+            });
+        }
+    }
+
     Err(ChessError::InvalidMove {
         reason: crate::chess_error::InvalidMoveReason::NotAMoveOption,
     })
@@ -86,25 +103,26 @@ pub fn play_move(game: &Game, chess_move: Move) -> Result<Game, ChessError> {
 }
 
 pub fn pice_moves_bitboard(game: &Game, target_piece: Square) -> Result<Bitboard, ChessError> {
-    let basic = board::legal_basic_moves_bitboard(&game.board, target_piece, game.turn);
-    let advanced = advanced_moves::legal_advanced_moves_bitboard(game, target_piece);
+    let (_, basic_moves) = board::legal_basic_moves_bitboard(&game.board, target_piece, game.turn)?;
 
-    match advanced {
-        Ok(board) => Ok(board.1),
-        Err(ChessError::InvalidMove {
-            reason: crate::chess_error::InvalidMoveReason::NotAMoveOption,
-        }) => match basic {
-            Ok(board) => Ok(board.1),
-            Err(v) => Err(v),
-        },
-        Err(v) => Err(v),
-    }
+    let (_, advanced_moves) = advanced_moves::legal_advanced_moves_bitboard(game, target_piece)?;
+
+    return Ok(basic_moves | advanced_moves);
 }
 
 pub fn play_basic_move(game: &Game, chess_move: BasicMove) -> Result<Game, ChessError> {
     let piece_mask = point(chess_move.piece_square.row, chess_move.piece_square.col);
 
     let (new_board, moved_piece) = board::do_basic_move(&game.board, chess_move, game.turn)?;
+
+    let (_, available_moves_mask) =
+        legal_basic_moves_bitboard(&game.board, chess_move.piece_square, game.turn)?;
+
+    if square_bitboard(chess_move.target_square) & available_moves_mask == 0 {
+        return Err(ChessError::InvalidMove {
+            reason: crate::chess_error::InvalidMoveReason::NotAMoveOption,
+        });
+    }
 
     Ok(Game {
         black_rook_left_moved: game.black_rook_left_moved
@@ -196,6 +214,7 @@ pub fn play_advanced_move(game: &Game, chess_move: AdvancedMove) -> Result<Game,
             piece_type,
             basic_move,
         } => play_promotion(game, piece_type, basic_move),
+        AdvancedMove::EnPessant { basic_move } => advanced_moves::do_en_pessant(game, basic_move),
     }
 }
 
@@ -224,5 +243,12 @@ pub fn playing_board(game: &Game) -> (ColorBoard, ColorBoard) {
     match game.turn {
         Color::Black => (game.board.black, game.board.white),
         Color::White => (game.board.white, game.board.black),
+    }
+}
+
+pub fn wating_en_pessant_pawns(game: &Game) -> Bitboard {
+    match game.turn {
+        Color::Black => game.white_en_pessant,
+        Color::White => game.black_en_pessant,
     }
 }

@@ -1,4 +1,4 @@
-use crate::bitboard::Bitboard;
+use crate::bitboard::{self, Bitboard, bitboard_string};
 use crate::board::{back_row, legal_basic_moves_bitboard};
 use crate::moves;
 use crate::piece::Piece;
@@ -40,8 +40,18 @@ pub fn legal_advanced_moves_bitboard(
         }
     }
 
-    if piece.piece_type == PieceType::Pawn && can_promote(&game.board, piece_square, game.turn)? {
-        moves |= legal_basic_moves_bitboard(&game.board, piece_square, game.turn)?.1;
+    if piece.piece_type == PieceType::Pawn {
+        let forward = match piece.piece_color {
+            Color::White => 1,
+            Color::Black => -1,
+        };
+
+        if can_promote(&game.board, piece_square, game.turn)? {
+            moves |= legal_basic_moves_bitboard(&game.board, piece_square, game.turn)?.1;
+        }
+
+        moves |= moves::pawn_capture_bitboard(piece.board_position, u64::max_value(), forward)
+            & game::wating_en_pessant_pawns(game);
     }
 
     Ok((piece, moves & !(square_bitboard(piece_square))))
@@ -210,6 +220,42 @@ pub fn do_promotion(
         black_rook_right_moved: game.black_rook_right_moved,
         white_king_moved: game.white_king_moved | (game.turn == White),
         white_rook_left_moved: game.white_rook_left_moved | (game.turn == White),
+        white_rook_right_moved: game.white_rook_right_moved,
+        black_en_pessant: 0,
+        white_en_pessant: 0,
+    })
+}
+
+pub fn do_en_pessant(game: &Game, chess_move: BasicMove) -> Result<Game, ChessError> {
+    let (new_board, _) = board::do_basic_move(&game.board, chess_move, game.turn)?;
+
+    let forward = match game.turn {
+        Color::White => 1,
+        Color::Black => -1,
+    };
+
+    let (playing_board, waiting_board) = board::select_playing_board(&new_board, game.turn);
+
+    Ok(Game {
+        board: board::new_board(
+            playing_board,
+            ColorBoard {
+                pawns: waiting_board.pawns
+                    & (!bitboard::displace(square_bitboard(chess_move.target_square), -forward, 0)),
+                knights: waiting_board.knights,
+                bishops: waiting_board.bishops,
+                rooks: waiting_board.rooks,
+                queens: waiting_board.queens,
+                kings: waiting_board.kings,
+            },
+            game.turn,
+        ),
+        turn: game.turn.other(),
+        black_king_moved: game.black_king_moved,
+        black_rook_left_moved: game.black_rook_left_moved,
+        black_rook_right_moved: game.black_rook_right_moved,
+        white_king_moved: game.white_king_moved,
+        white_rook_left_moved: game.white_rook_left_moved,
         white_rook_right_moved: game.white_rook_right_moved,
         black_en_pessant: 0,
         white_en_pessant: 0,

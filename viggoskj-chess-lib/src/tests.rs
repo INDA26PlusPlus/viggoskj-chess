@@ -2,10 +2,11 @@
 
 mod tests {
     use crate::{
+        bitboard::bitboard_string,
         board::Square,
         chess_error::ChessError,
         create_game,
-        game::{Color, Game, play_move},
+        game::{self, Color, Game, play_move},
         moves::BasicMove,
         parsing::{parse_board, parse_move},
     };
@@ -283,6 +284,93 @@ rnbqkbnr
             Err(ChessError::InvalidMove {
                 reason: crate::chess_error::InvalidMoveReason::InvalidPromotionPiece
             })
+        );
+    }
+
+    #[test]
+    fn white_en_pessant() {
+        let mut game = game_from_board(
+            "
+                --------
+                -----P--
+                --------
+                --------
+                ----p---
+                --------
+                --------
+                --------
+            ",
+        );
+
+
+        game = play_move(
+            &game,
+            crate::moves::Move::Basic {
+                chess_move: basic_move(4, 3, 4, 4),
+            },
+        )
+        .unwrap();
+
+        board_str_equal(
+            game.board.to_string(),
+            "
+                --------
+                -----P--
+                --------
+                ----p---
+                --------
+                --------
+                --------
+                --------
+    "
+            .to_string(),
+        );
+
+        game = play_move(
+            &game,
+            crate::moves::Move::Basic {
+                chess_move: basic_move(5, 6, 5, 4),
+            },
+        )
+        .unwrap();
+
+        board_str_equal(
+            game.board.to_string(),
+            "
+                --------
+                --------
+                --------
+                ----pP--
+                --------
+                --------
+                --------
+                --------
+    "
+            .to_string(),
+        );
+
+
+        game = play_move(
+            &game,
+            crate::moves::Move::Basic {
+                chess_move: basic_move(4, 4, 5, 5),
+            },
+        )
+        .unwrap();
+
+        board_str_equal(
+            game.board.to_string(),
+            "
+                --------
+                --------
+                -----p--
+                --------
+                --------
+                --------
+                --------
+                --------
+    "
+            .to_string(),
         );
     }
 }

@@ -145,26 +145,22 @@ pub fn legal_basic_moves_bitboard(
 
     let moves = moves::legal_basic_moves_bitboard(piece, playing.mask(), waiting.mask());
 
-    Ok((piece, moves))
+    Ok((piece, moves & !(square_bitboard(piece_square))))
 }
 
+
+// todo, actually move the move enforcement into the game layer
 pub fn do_basic_move(
     board: &Board,
     chess_move: BasicMove,
     playing: Color,
 ) -> Result<(Board, Piece), ChessError> {
-    let (piece, move_set) = legal_basic_moves_bitboard(board, chess_move.piece_square, playing)?;
+    let (piece, _) = legal_basic_moves_bitboard(board, chess_move.piece_square, playing)?;
     let target_mask = point(chess_move.target_square.row, chess_move.target_square.col);
 
     if piece.piece_color != playing {
         return Err(ChessError::InvalidMove {
             reason: crate::chess_error::InvalidMoveReason::WrongColor,
-        });
-    }
-
-    if (move_set & target_mask) == 0 {
-        return Err(ChessError::InvalidMove {
-            reason: crate::chess_error::InvalidMoveReason::NotAMoveOption,
         });
     }
 
