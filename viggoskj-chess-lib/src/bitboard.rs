@@ -1,18 +1,20 @@
-pub type BitBoard = u64;
+use crate::advanced_moves::can_try_kingside_castle;
 
-pub fn row(row: u32) -> BitBoard {
+pub type Bitboard = u64;
+
+pub fn row(row: u32) -> Bitboard {
     (0..8).map(|x| row * 8 + x).fold(0, |y, x| 2u64.pow(x) + y)
 }
 
-pub fn col(col: u32) -> BitBoard {
+pub fn col(col: u32) -> Bitboard {
     (0..8).map(|x| col + 8 * x).fold(0, |y, x| 2u64.pow(x) + y)
 }
 
-pub fn point(row: u32, col: u32) -> BitBoard {
+pub fn point(row: u32, col: u32) -> Bitboard {
     2u64.pow(row * 8 + col)
 }
 
-pub fn displace(board: BitBoard, rows: i32, cols: i32) -> BitBoard {
+pub fn displace(board: Bitboard, rows: i32, cols: i32) -> Bitboard {
     let mut result = board;
 
     result = shift(result, rows * 8);
@@ -38,12 +40,13 @@ fn shift(x: u64, amount: i32) -> u64 {
     }
 }
 
-pub fn at(board: BitBoard, row: u32, col: u32) -> bool {
+pub fn at(board: Bitboard, row: u32, col: u32) -> bool {
     (board & point(row, col)) > 0
 }
 
-pub fn bitboard_string(board: BitBoard) -> String {
-    (0..8).rev()
+pub fn bitboard_string(board: Bitboard) -> String {
+    (0..8)
+        .rev()
         .map(|row| (0..8).map(move |col| at(board, row, col)))
         .fold(String::new(), |all, row| {
             all + &row.fold(String::new(), |mut all, c| {
@@ -51,4 +54,8 @@ pub fn bitboard_string(board: BitBoard) -> String {
                 all
             }) + "\n"
         })
+}
+
+pub fn bitboard_if(board: Bitboard, condition: bool) -> Bitboard {
+    if condition { board } else { 0 }
 }

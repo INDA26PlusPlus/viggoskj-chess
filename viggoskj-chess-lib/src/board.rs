@@ -1,19 +1,19 @@
-use crate::bitboard::{BitBoard, point};
+use crate::bitboard::{Bitboard, point};
 use crate::chess_error::ChessError;
 use crate::game::Color;
-use crate::instantiation;
 use crate::moves::BasicMove;
 use crate::piece::{Piece, PieceType, if_piece_type};
 use crate::{bitboard, piece};
+use crate::{instantiation, moves};
 
 #[derive(Copy, Clone)]
 pub struct ColorBoard {
-    pub pawns: BitBoard,
-    pub knights: BitBoard,
-    pub bishops: BitBoard,
-    pub rooks: BitBoard,
-    pub queens: BitBoard,
-    pub kings: BitBoard,
+    pub pawns: Bitboard,
+    pub knights: Bitboard,
+    pub bishops: Bitboard,
+    pub rooks: Bitboard,
+    pub queens: Bitboard,
+    pub kings: Bitboard,
 }
 
 pub struct Board {
@@ -28,7 +28,7 @@ pub struct Square {
 }
 
 impl ColorBoard {
-    pub fn mask(&self) -> BitBoard {
+    pub fn mask(&self) -> Bitboard {
         self.pawns | self.knights | self.bishops | self.rooks | self.queens | self.kings
     }
 }
@@ -101,12 +101,12 @@ impl Board {
         return None;
     }
 
-    pub fn mask(&self) -> BitBoard {
+    pub fn mask(&self) -> Bitboard {
         self.white.mask() | self.black.mask()
     }
 }
 
-pub fn square_bitboard(square: Square) -> BitBoard {
+pub fn square_bitboard(square: Square) -> Bitboard {
     point(square.row, square.col)
 }
 
@@ -127,11 +127,11 @@ pub fn validate_square(row: u32, col: u32) -> Result<(), ChessError> {
     }
 }
 
-pub fn piece_basic_moves_bitboard(
+pub fn legal_basic_moves_bitboard(
     board: &Board,
     piece_square: Square,
     playing: Color,
-) -> Result<(Piece, BitBoard), ChessError> {
+) -> Result<(Piece, Bitboard), ChessError> {
     let piece = match board.get_pice(piece_square.row, piece_square.col) {
         Some(t) => t,
         _ => {
@@ -143,19 +143,18 @@ pub fn piece_basic_moves_bitboard(
 
     let (playing, waiting) = select_playing_board(board, playing);
 
-    let moves = piece::piece_basic_move_bit_board(piece, playing.mask(), waiting.mask());
+    let moves = moves::legal_basic_moves_bitboard(piece, playing.mask(), waiting.mask());
 
     Ok((piece, moves))
 }
 
-pub fn basic_move_piece(
+pub fn do_basic_move(
     board: &Board,
     chess_move: BasicMove,
     playing: Color,
-) -> Result<Board, ChessError> {
-    let (piece, move_set) = piece_basic_moves_bitboard(board, chess_move.piece_square, playing)?;
+) -> Result<(Board, Piece), ChessError> {
+    let (piece, move_set) = legal_basic_moves_bitboard(board, chess_move.piece_square, playing)?;
     let target_mask = point(chess_move.target_square.row, chess_move.target_square.col);
-    let piece_mask = point(chess_move.piece_square.row, chess_move.piece_square.col);
 
     if piece.piece_color != playing {
         return Err(ChessError::InvalidMove {
@@ -195,7 +194,7 @@ pub fn basic_move_piece(
             | if_piece_type(piece.piece_type, PieceType::Rook, target_mask),
     };
 
-    Ok(new_board(new_playing_board, new_wating_board, playing))
+    Ok((new_board(new_playing_board, new_wating_board, playing), piece))
 }
 
 pub fn select_playing_board(board: &Board, color: Color) -> (ColorBoard, ColorBoard) {
@@ -219,5 +218,12 @@ pub fn new_board(
             Color::White => new_waiting_board,
             Color::Black => new_playing_board,
         },
+    }
+}
+
+pub fn back_row(color: Color) -> u32 {
+    match color {
+        Color::White => 0,
+        Color::Black => 7,
     }
 }

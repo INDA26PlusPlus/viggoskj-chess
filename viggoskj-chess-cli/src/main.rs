@@ -1,9 +1,9 @@
 use std::{panic::panic_any, vec};
 
 use viggoskj_chess_lib::{
-    bitboard::{self, BitBoard, bitboard_string, displace},
+    bitboard::{self, Bitboard, bitboard_string, displace},
     game, parsing,
-    piece::{self, piece_basic_move_bit_board},
+    piece::{self},
 };
 
 pub fn main() {
@@ -21,8 +21,11 @@ pub fn main() {
         "a2a4", "h7h6", "a4a5", "h6h5", "a5a6", "h5h4", "a6b7", "h4h3", "b7a8n",
     ];
 
+    let moves_ant_pessant = vec!["d2d3", "h7h6", "d3d4", "g7g6", "d4d5", "e7e5", "d5e6"];
+
     play_game(moves_with_queen_castle);
     play_game(moves_with_promotion);
+    play_game(moves_ant_pessant);
 }
 
 fn play_game(moves: std::vec::Vec<&str>) {
@@ -31,7 +34,7 @@ fn play_game(moves: std::vec::Vec<&str>) {
     for ms in moves {
         let m = parsing::parse_move(ms).unwrap();
 
-        let r = viggoskj_chess_lib::game::move_piece(&g, m);
+        let r = viggoskj_chess_lib::game::play_move(&g, m);
         match r {
             Ok(g2) => {
                 g = g2;
@@ -44,8 +47,11 @@ fn play_game(moves: std::vec::Vec<&str>) {
                         println!(
                             "{}",
                             bitboard_string(
-                                viggoskj_chess_lib::game::pice_moves_bitboard(&g, chess_move.piece_square)
-                                    .unwrap()
+                                viggoskj_chess_lib::game::pice_moves_bitboard(
+                                    &g,
+                                    chess_move.piece_square
+                                )
+                                .unwrap()
                             )
                         );
                     }
@@ -69,7 +75,9 @@ fn play_game(moves: std::vec::Vec<&str>) {
                             );
                             println!("{}", piece_type.to_char());
                         }
-                        viggoskj_chess_lib::moves::AdvancedMove::QueenSideCastle => println!("queenside castle")
+                        viggoskj_chess_lib::moves::AdvancedMove::QueenSideCastle => {
+                            println!("queenside castle")
+                        }
                     },
                 }
                 Err(v).unwrap()

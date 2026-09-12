@@ -1,6 +1,10 @@
+use crate::bitboard::Bitboard;
+use crate::board::{back_row, legal_basic_moves_bitboard};
+use crate::moves;
+use crate::piece::Piece;
 use crate::{
     bitboard::point,
-    board::{self, Board, ColorBoard, square_bitboard},
+    board::{self, Board, ColorBoard, Square, square_bitboard},
     chess_error::ChessError,
     game::{
         self,
@@ -10,6 +14,38 @@ use crate::{
     moves::{AdvancedMove, BasicMove},
     piece::{self, PieceType},
 };
+
+pub fn legal_advanced_moves_bitboard(
+    game: &Game,
+    piece_square: Square,
+) -> Result<(Piece, Bitboard), ChessError> {
+    let piece = match game.board.get_pice(piece_square.row, piece_square.col) {
+        Some(t) => t,
+        _ => {
+            return Err(ChessError::InvalidMove {
+                reason: crate::chess_error::InvalidMoveReason::NoTargetPiece,
+            });
+        }
+    };
+
+    let mut moves = 0;
+
+    if piece.piece_type == PieceType::King {
+        if can_try_kingside_castle(game) {
+            moves |= legal_kingside_castling_move(game.board.mask(), piece_square.row);
+        }
+
+        if can_try_queenside_castle(game) {
+            moves |= legal_queenside_castling_move_bitboard(game.board.mask(), piece_square.row);
+        }
+    }
+
+    if piece.piece_type == PieceType::Pawn && can_promote(&game.board, piece_square, game.turn)? {
+        moves |= legal_basic_moves_bitboard(&game.board, piece_square, game.turn)?.1;
+    }
+
+    Ok((piece, moves & !(square_bitboard(piece_square))))
+}
 
 pub fn can_try_queenside_castle(game: &Game) -> bool {
     if game.turn == Color::White {
@@ -38,7 +74,7 @@ pub fn can_try_kingside_castle(game: &Game) -> bool {
 }
 
 pub fn do_kingside_castling(game: &Game) -> Result<Game, ChessError> {
-    let king_row = king_row(game);
+    let king_row = back_row(game.turn);
     let (playing_board, waiting_board) = playing_board(game);
 
     let new_playing_board = ColorBoard {
@@ -59,11 +95,13 @@ pub fn do_kingside_castling(game: &Game) -> Result<Game, ChessError> {
         white_king_moved: game.white_king_moved | (game.turn == White),
         white_rook_left_moved: game.white_rook_left_moved,
         white_rook_right_moved: game.white_rook_right_moved | (game.turn == White),
+        white_en_pessant: 0,
+        black_en_pessant: 0,
     })
 }
 
 pub fn do_queenside_castling(game: &Game) -> Result<Game, ChessError> {
-    let king_row = king_row(game);
+    let king_row = back_row(game.turn);
     let (playing_board, waiting_board) = playing_board(game);
 
     let new_playing_board = ColorBoard {
@@ -84,7 +122,32 @@ pub fn do_queenside_castling(game: &Game) -> Result<Game, ChessError> {
         white_king_moved: game.white_king_moved | (game.turn == White),
         white_rook_left_moved: game.white_rook_left_moved | (game.turn == White),
         white_rook_right_moved: game.white_rook_right_moved,
+        black_en_pessant: 0,
+        white_en_pessant: 0,
     })
+}
+
+pub fn can_promote(board: &Board, pawn_square: Square, playing: Color) -> Result<bool, ChessError> {
+    let piece = match board.get_pice(pawn_square.row, pawn_square.col) {
+        Some(t) => t,
+        _ => {
+            return Err(ChessError::InvalidMove {
+                reason: crate::chess_error::InvalidMoveReason::NoTargetPiece,
+            });
+        }
+    };
+
+    if piece.piece_type != PieceType::Pawn {
+        return Err(ChessError::InvalidMove {
+            reason: crate::chess_error::InvalidMoveReason::NotAMoveOption,
+        });
+    }
+
+    let (playing, waiting) = board::select_playing_board(board, playing);
+
+    let move_mask = moves::legal_basic_moves_bitboard(piece, playing.mask(), waiting.mask());
+
+    Ok(square_bitboard(pawn_square) & move_mask != 0)
 }
 
 pub fn do_promotion(
@@ -92,7 +155,7 @@ pub fn do_promotion(
     promotion_type: PieceType,
     basic_move: BasicMove,
 ) -> Result<Game, ChessError> {
-    let new_board = board::basic_move_piece(&game.board, basic_move, game.turn)?;
+    let (new_board, _) = board::do_basic_move(&game.board, basic_move, game.turn)?;
 
     let (playing_board, waiting_board) = board::select_playing_board(&new_board, game.turn);
 
@@ -115,7 +178,7 @@ pub fn do_promotion(
                 promotion_type,
                 square_bitboard(basic_move.target_square),
             ),
-        pawns: playing_board.pawns& !(square_bitboard(basic_move.target_square)),
+        pawns: playing_board.pawns & !(square_bitboard(basic_move.target_square)),
         queens: playing_board.queens
             | piece::if_piece_type(
                 PieceType::Queen,
@@ -139,12 +202,23 @@ pub fn do_promotion(
         white_king_moved: game.white_king_moved | (game.turn == White),
         white_rook_left_moved: game.white_rook_left_moved | (game.turn == White),
         white_rook_right_moved: game.white_rook_right_moved,
+        black_en_pessant: 0,
+        white_en_pessant: 0,
     })
 }
 
-fn king_row(game: &Game) -> u32 {
-    match game.turn {
-        White => 0,
-        Black => 7,
+pub fn legal_kingside_castling_move(full_mask: Bitboard, row: u32) -> Bitboard {
+    if full_mask & !(point(row, 6) | point(row, 5)) == full_mask {
+        point(row, 6)
+    } else {
+        0
+    }
+}
+
+pub fn legal_queenside_castling_move_bitboard(full_mask: Bitboard, row: u32) -> Bitboard {
+    if full_mask & !(point(row, 1) | point(row, 2) | point(row, 3)) == full_mask {
+        point(row, 2)
+    } else {
+        0
     }
 }

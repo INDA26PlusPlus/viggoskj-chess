@@ -18,6 +18,8 @@ pub fn create_game() -> game::Game {
         white_rook_left_moved: false,
         white_rook_right_moved: false,
         black_king_moved: false,
+        black_en_pessant: 0,
+        white_en_pessant: 0
     };
 
     return game;
