@@ -31,7 +31,7 @@ fn play_game(moves: std::vec::Vec<&str>) {
                         println!(
                             "{}",
                             bitboard_string(
-                                viggoskj_chess_lib::game::pice_moves_bitboard(
+                                viggoskj_chess_lib::game::legal_moves_bitboard(
                                     &g,
                                     chess_move.piece_square
                                 )
@@ -50,7 +50,7 @@ fn play_game(moves: std::vec::Vec<&str>) {
                             println!(
                                 "{}",
                                 bitboard_string(
-                                    viggoskj_chess_lib::game::pice_moves_bitboard(
+                                    viggoskj_chess_lib::game::legal_moves_bitboard(
                                         &g,
                                         basic_move.piece_square
                                     )
@@ -65,7 +65,7 @@ fn play_game(moves: std::vec::Vec<&str>) {
                             println!(
                                 "{}",
                                 bitboard_string(
-                                    viggoskj_chess_lib::game::pice_moves_bitboard(
+                                    viggoskj_chess_lib::game::legal_moves_bitboard(
                                         &g,
                                         basic_move.piece_square
                                     )

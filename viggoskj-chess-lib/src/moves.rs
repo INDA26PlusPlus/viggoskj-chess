@@ -1,4 +1,4 @@
-use crate::bitboard::{Bitboard, bitboard_if, displace, point};
+use crate::bitboard::{Bitboard, bitboard_if, bitboard_string, displace, point};
 use crate::board;
 use crate::board::Square;
 use crate::chess_error::ChessError;
@@ -10,6 +10,18 @@ use crate::piece::{Piece, PieceType};
 pub struct BasicMove {
     pub piece_square: Square,
     pub target_square: Square,
+}
+
+#[derive(Copy, Clone)]
+pub struct PossibleMove {
+    pub piece: Piece,
+    pub taget_square: Square,
+}
+
+#[derive(Copy, Clone)]
+pub struct PossibleMovesBitboard {
+    pub piece: Piece,
+    pub moves: Bitboard,
 }
 
 #[derive(Copy, Clone)]
@@ -56,7 +68,7 @@ pub fn legal_basic_moves_bitboard(
                 | x_move_bitboard(piece.board_position, playing_mask, waiting_mask)
         }
         PieceType::King => king_move_bitboard(piece.board_position, playing_mask),
-        PieceType::Knight => knight_move_bitboard(piece.board_position),
+        PieceType::Knight => knight_move_bitboard(piece.board_position, playing_mask),
     }
 }
 
@@ -99,7 +111,7 @@ fn x_move_bitboard(
         | move_bitboard(-1, 1, piece_placement, playing_mask, wating_mask)
 }
 
-fn king_move_bitboard(piece_placement: Bitboard, self_mask: Bitboard) -> Bitboard {
+fn king_move_bitboard(piece_placement: Bitboard, playing_mask: Bitboard) -> Bitboard {
     (displace(piece_placement, -1, -1)
         | displace(piece_placement, -1, 0)
         | displace(piece_placement, -1, 1)
@@ -108,18 +120,19 @@ fn king_move_bitboard(piece_placement: Bitboard, self_mask: Bitboard) -> Bitboar
         | displace(piece_placement, 1, -1)
         | displace(piece_placement, 1, 0)
         | displace(piece_placement, 1, 1))
-        & !self_mask
+        & (!playing_mask)
 }
 
-fn knight_move_bitboard(piece_placement: Bitboard) -> Bitboard {
-    displace(piece_placement, -2, -1)
+fn knight_move_bitboard(piece_placement: Bitboard, playing_mask: Bitboard) -> Bitboard {
+    (displace(piece_placement, -2, -1)
         | displace(piece_placement, -2, 1)
         | displace(piece_placement, -1, -2)
         | displace(piece_placement, -1, 2)
         | displace(piece_placement, 1, -2)
         | displace(piece_placement, 1, 2)
         | displace(piece_placement, 2, -1)
-        | displace(piece_placement, 2, 1)
+        | displace(piece_placement, 2, 1))
+        & (!playing_mask)
 }
 
 fn move_bitboard(
@@ -150,7 +163,7 @@ fn single_move_bitboard(
     (displace(piece_placement, row_move, col_move)) & (!self_mask) | piece_placement
 }
 
-pub (crate)fn pawn_capture_bitboard(
+pub(crate) fn pawn_capture_bitboard(
     piece_placement: Bitboard,
     wating_mask: Bitboard,
     forwards: i32,

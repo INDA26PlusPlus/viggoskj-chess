@@ -2,57 +2,10 @@
 
 mod tests {
     use crate::{
-        bitboard::bitboard_string,
-        board::Square,
-        chess_error::ChessError,
-        create_game,
-        game::{self, Color, Game, play_move},
-        moves::BasicMove,
-        parsing::{parse_board, parse_move},
+        bitboard::bitboard_string, board::Square, chess_error::ChessError, create_game, game::{self, Color, Game, play_move}, moves::BasicMove, parsing::{parse_board, parse_move}, tests::tests::{basic_move, board_str_equal, game_from_board},
     };
 
     use super::*;
-
-    fn basic_move(col1: u32, row1: u32, col2: u32, row2: u32) -> BasicMove {
-        return BasicMove {
-            piece_square: Square {
-                row: row1,
-                col: col1,
-            },
-            target_square: Square {
-                row: row2,
-                col: col2,
-            },
-        };
-    }
-
-    fn game_from_board(board_str: &str) -> Game {
-        Game {
-            white_rook_left_moved: false,
-            white_rook_right_moved: false,
-            white_king_moved: false,
-            black_rook_left_moved: false,
-            black_rook_right_moved: false,
-            black_king_moved: false,
-            white_en_pessant: 0,
-            black_en_pessant: 0,
-            board: parse_board(
-                board_str
-                    .replace(' ', "")
-                    .replace('\t', "")
-                    .replace('\n', ""),
-            )
-            .unwrap(),
-            turn: Color::White,
-        }
-    }
-
-    fn board_str_equal(b1: String, b2: String) {
-        assert_eq!(
-            b1.replace(' ', "").replace('\t', "").replace('\n', ""),
-            b2.replace(' ', "").replace('\t', "").replace('\n', "")
-        )
-    }
 
     #[test]
     fn parse_board_correct() {
@@ -284,93 +237,6 @@ rnbqkbnr
             Err(ChessError::InvalidMove {
                 reason: crate::chess_error::InvalidMoveReason::InvalidPromotionPiece
             })
-        );
-    }
-
-    #[test]
-    fn white_en_pessant() {
-        let mut game = game_from_board(
-            "
-                --------
-                -----P--
-                --------
-                --------
-                ----p---
-                --------
-                --------
-                --------
-            ",
-        );
-
-
-        game = play_move(
-            &game,
-            crate::moves::Move::Basic {
-                chess_move: basic_move(4, 3, 4, 4),
-            },
-        )
-        .unwrap();
-
-        board_str_equal(
-            game.board.to_string(),
-            "
-                --------
-                -----P--
-                --------
-                ----p---
-                --------
-                --------
-                --------
-                --------
-    "
-            .to_string(),
-        );
-
-        game = play_move(
-            &game,
-            crate::moves::Move::Basic {
-                chess_move: basic_move(5, 6, 5, 4),
-            },
-        )
-        .unwrap();
-
-        board_str_equal(
-            game.board.to_string(),
-            "
-                --------
-                --------
-                --------
-                ----pP--
-                --------
-                --------
-                --------
-                --------
-    "
-            .to_string(),
-        );
-
-
-        game = play_move(
-            &game,
-            crate::moves::Move::Basic {
-                chess_move: basic_move(4, 4, 5, 5),
-            },
-        )
-        .unwrap();
-
-        board_str_equal(
-            game.board.to_string(),
-            "
-                --------
-                --------
-                -----p--
-                --------
-                --------
-                --------
-                --------
-                --------
-    "
-            .to_string(),
         );
     }
 }

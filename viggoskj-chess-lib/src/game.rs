@@ -1,18 +1,22 @@
+use std::vec;
+
 use crate::{
     advanced_moves::{
         self, can_promote, can_try_kingside_castle, can_try_queenside_castle, do_kingside_castling,
         do_promotion, do_queenside_castling, legal_kingside_castling_move,
         legal_queenside_castling_move_bitboard,
     },
-    bitboard::{self, Bitboard, bitboard_if, bitboard_string, point},
-    board::{
-        self, Board, ColorBoard, Square, legal_basic_moves_bitboard, square_bitboard,
-        validate_square,
+    bitboard::{
+        self, Bitboard, bitboard_bit_count, bitboard_if, bitboard_iterator, bitboard_string, point,
     },
-    chess_error::ChessError,
+    board::{
+        self, Board, ColorBoard, Square, legal_basic_moves_bitboard, select_playing_board,
+        square_bitboard, validate_square,
+    },
+    chess_error::{ChessError, InvalidMoveReason::NoTargetPiece},
     game::Color::White,
     instantiation,
-    moves::{self, AdvancedMove, BasicMove, Move},
+    moves::{self, AdvancedMove, BasicMove, Move, PossibleMove, PossibleMovesBitboard},
     piece::{Piece, PieceType},
 };
 
@@ -102,7 +106,7 @@ pub fn play_move(game: &Game, chess_move: Move) -> Result<Game, ChessError> {
     }
 }
 
-pub fn pice_moves_bitboard(game: &Game, target_piece: Square) -> Result<Bitboard, ChessError> {
+pub fn legal_moves_bitboard(game: &Game, target_piece: Square) -> Result<Bitboard, ChessError> {
     let (_, basic_moves) = board::legal_basic_moves_bitboard(&game.board, target_piece, game.turn)?;
 
     let (_, advanced_moves) = advanced_moves::legal_advanced_moves_bitboard(game, target_piece)?;
@@ -251,4 +255,50 @@ pub fn wating_en_pessant_pawns(game: &Game) -> Bitboard {
         Color::Black => game.white_en_pessant,
         Color::White => game.black_en_pessant,
     }
+}
+
+pub fn possible_moves(game: &Game) -> Vec<PossibleMove> {
+    Vec::from_iter(
+        possible_move_bitboards(game)
+            .iter()
+            .map(|possible| {
+                bitboard_iterator(possible.moves)
+                    .filter(|(_, truthy)| *truthy)
+                    .map(|(square, _)| PossibleMove {
+                        piece: possible.piece,
+                        taget_square: square,
+                    })
+            })
+            .flatten(),
+    )
+}
+
+pub fn possible_move_bitboards(game: &Game) -> Vec<PossibleMovesBitboard> {
+    let mut moves: Vec<PossibleMovesBitboard> = Vec::new();
+
+    let (playing, _) = playing_board(game);
+
+    let mut mask = playing.mask();
+
+    for i in 0..64 {
+        let bit = mask % 2;
+        mask = mask >> 1;
+        if bit == 1 {
+            let row = i / 8;
+            let col = 7 - i % 8;
+            println!("{}", bitboard_string(legal_moves_bitboard(game, Square { row: row, col: col }).unwrap()));
+            moves.push(PossibleMovesBitboard {
+                moves: match legal_moves_bitboard(game, Square { row: row, col: col }) {
+                    Ok(b) => b,
+                    Err(ChessError::InvalidMove {
+                        reason: NoTargetPiece,
+                    }) => 0,
+                    Err(e) => Err(e).unwrap(),
+                },
+                piece: game.board.get_pice(row, col).unwrap(),
+            });
+        }
+    }
+
+    return moves;
 }

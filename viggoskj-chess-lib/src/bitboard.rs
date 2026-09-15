@@ -1,6 +1,37 @@
-use crate::advanced_moves::can_try_kingside_castle;
+use crate::{advanced_moves::can_try_kingside_castle, board::Square};
 
 pub type Bitboard = u64;
+
+pub struct BitboardIterator {
+    bitboard: u64,
+    i: u32,
+}
+
+impl Iterator for BitboardIterator {
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.i == 64 {
+            return None;
+        }
+
+        let row = 8 - self.i / 8;
+        let col = 7 - self.i % 8;
+
+        self.i += 1;
+        return Some((
+            Square { col: col, row: row },
+            ((self.bitboard >> self.i - 1) % 2) == 1,
+        ));
+    }
+
+    type Item = (Square, bool);
+}
+
+pub fn bitboard_iterator(board: Bitboard) -> BitboardIterator {
+    BitboardIterator {
+        bitboard: board,
+        i: 0,
+    }
+}
 
 pub fn row(row: u32) -> Bitboard {
     (0..8).map(|x| row * 8 + x).fold(0, |y, x| 2u64.pow(x) + y)
@@ -72,4 +103,8 @@ pub fn bitboard_string(board: Bitboard) -> String {
 
 pub fn bitboard_if(board: Bitboard, condition: bool) -> Bitboard {
     if condition { board } else { 0 }
+}
+
+pub fn bitboard_bit_count(board: Bitboard) -> u64 {
+    (0..64).map(|n| 1 - (board << n) % 2).fold(0, |t, c| t + c)
 }

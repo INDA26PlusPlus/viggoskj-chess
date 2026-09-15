@@ -8,6 +8,7 @@ pub mod parsing;
 mod tests;
 mod advanced_moves;
 mod instantiation;
+mod check;
 
 pub fn create_game() -> game::Game {
     let game: game::Game = game::Game {
