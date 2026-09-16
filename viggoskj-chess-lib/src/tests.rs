@@ -7,7 +7,7 @@ use crate::{
 
 mod basic_tests;
 mod en_pessant_tests;
-mod move_counts;
+mod move_checks;
 #[cfg(test)]
 
 pub mod tests {
@@ -45,6 +45,27 @@ pub mod tests {
             )
             .unwrap(),
             turn: Color::White,
+        }
+    }
+
+        pub fn game_from_board_advanced(board_str: &str, color: Color) -> Game {
+        Game {
+            white_rook_left_moved: false,
+            white_rook_right_moved: false,
+            white_king_moved: false,
+            black_rook_left_moved: false,
+            black_rook_right_moved: false,
+            black_king_moved: false,
+            white_en_pessant: 0,
+            black_en_pessant: 0,
+            board: parsing::parse_board(
+                board_str
+                    .replace(' ', "")
+                    .replace('\t', "")
+                    .replace('\n', ""),
+            )
+            .unwrap(),
+            turn: color,
         }
     }
 

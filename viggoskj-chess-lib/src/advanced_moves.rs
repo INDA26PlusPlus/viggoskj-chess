@@ -1,5 +1,5 @@
 use crate::bitboard::{self, Bitboard, bitboard_string};
-use crate::board::{back_row, legal_basic_moves_bitboard};
+use crate::board::{back_row, initialy_legal_basic_moves_bitboard};
 use crate::moves;
 use crate::piece::Piece;
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
     piece::{self, PieceType},
 };
 
-pub fn legal_advanced_moves_bitboard(
+pub fn initialy_legal_advanced_moves_bitboard(
     game: &Game,
     piece_square: Square,
 ) -> Result<(Piece, Bitboard), ChessError> {
@@ -28,14 +28,16 @@ pub fn legal_advanced_moves_bitboard(
         }
     };
 
+    let king_row = back_row(game.turn);
+
     let mut moves = 0;
 
     if piece.piece_type == PieceType::King {
-        if can_try_kingside_castle(game) {
+        if can_try_kingside_castle(game) && piece_square.row == king_row {
             moves |= legal_kingside_castling_move(game.board.mask(), piece_square.row);
         }
 
-        if can_try_queenside_castle(game) {
+        if can_try_queenside_castle(game) && piece_square.row == king_row {
             moves |= legal_queenside_castling_move_bitboard(game.board.mask(), piece_square.row);
         }
     }
@@ -47,7 +49,7 @@ pub fn legal_advanced_moves_bitboard(
         };
 
         if can_promote(&game.board, piece_square, game.turn)? {
-            moves |= legal_basic_moves_bitboard(&game.board, piece_square, game.turn)?.1;
+            moves |= initialy_legal_basic_moves_bitboard(&game.board, piece_square, game.turn)?.1;
         }
 
         moves |= moves::pawn_capture_bitboard(piece.board_position, u64::max_value(), forward)
@@ -275,5 +277,28 @@ pub fn legal_queenside_castling_move_bitboard(full_mask: Bitboard, row: u32) -> 
         point(row, 2)
     } else {
         0
+    }
+}
+
+pub fn advanced_move_movement(advanced_move: AdvancedMove, color: Color) -> BasicMove {
+    let row = match color {
+        Black => 7,
+        White => 0,
+    };
+
+    match advanced_move {
+        AdvancedMove::EnPessant { basic_move } => basic_move,
+        AdvancedMove::KingSideCastle => BasicMove {
+            piece_square: Square { row: row, col: 4 },
+            target_square: Square { row: row, col: 6 },
+        },
+        AdvancedMove::QueenSideCastle => BasicMove {
+            piece_square: Square { row: row, col: 4 },
+            target_square: Square { row: row, col: 2 },
+        },
+        AdvancedMove::Promotion {
+            piece_type: _,
+            basic_move,
+        } => basic_move,
     }
 }

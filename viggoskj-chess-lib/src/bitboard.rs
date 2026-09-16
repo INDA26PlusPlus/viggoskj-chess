@@ -13,8 +13,8 @@ impl Iterator for BitboardIterator {
             return None;
         }
 
-        let row = 8 - self.i / 8;
-        let col = 7 - self.i % 8;
+        let row = self.i / 8;
+        let col = self.i % 8;
 
         self.i += 1;
         return Some((

@@ -1,12 +1,13 @@
+use crate::advanced_moves::advanced_move_movement;
 use crate::bitboard::{Bitboard, bitboard_if, bitboard_string, displace, point};
-use crate::board;
 use crate::board::Square;
+use crate::board::{self, ColorBoard};
 use crate::chess_error::ChessError;
 use crate::game::Color;
 use crate::instantiation;
 use crate::piece::{Piece, PieceType};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct BasicMove {
     pub piece_square: Square,
     pub target_square: Square,
@@ -24,7 +25,7 @@ pub struct PossibleMovesBitboard {
     pub moves: Bitboard,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum AdvancedMove {
     KingSideCastle,
     QueenSideCastle,
@@ -37,7 +38,7 @@ pub enum AdvancedMove {
     },
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Move {
     Advanced { chess_move: AdvancedMove },
     Basic { chess_move: BasicMove },
@@ -78,7 +79,7 @@ fn pawn_move_bitboard(
     playing_mask: Bitboard,
     wating_mask: Bitboard,
 ) -> Bitboard {
-    single_move_bitboard(forward, 0, piece.board_position, playing_mask)
+    (single_move_bitboard(forward, 0, piece.board_position, playing_mask) & (!wating_mask))
         | pawn_capture_bitboard(piece.board_position, wating_mask, forward)
         | bitboard_if(
             pawn_double_step_board(piece.board_position, playing_mask, wating_mask, forward),
@@ -152,6 +153,27 @@ fn move_bitboard(
 
     now = single_move_bitboard(row_move, col_move, now, playing_mask);
     return now & (!piece_placement);
+}
+
+pub fn is_same_movement(move1: Move, move2: Move, color: Color) -> bool {
+    match move1 {
+        Move::Advanced { chess_move } => match move2 {
+            Move::Advanced {
+                chess_move: chess_move2,
+            } => chess_move == chess_move2,
+            Move::Basic {
+                chess_move: chess_move2,
+            } => chess_move2 == advanced_move_movement(chess_move, color),
+        },
+        Move::Basic { chess_move } => match move2 {
+            Move::Advanced {
+                chess_move: chess_move2,
+            } => chess_move == advanced_move_movement(chess_move2, color),
+            Move::Basic {
+                chess_move: chess_move2,
+            } => chess_move == chess_move2,
+        },
+    }
 }
 
 fn single_move_bitboard(

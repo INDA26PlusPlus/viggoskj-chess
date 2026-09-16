@@ -9,14 +9,14 @@ mod tests {
 
     #[test]
     fn parse_board_correct() {
-        let string = "RNBQKBNR
-PPPPPPPP
---------
-----q---
-k-------
------P--
+        let string = "rnbqkbnr
 pppppppp
-rnbqkbnr
+--------
+----Q---
+K-------
+-----p--
+PPPPPPPP
+RNBQKBNR
 ";
         assert_eq!(parse_board(string.to_string()).unwrap().to_string(), string);
     }
@@ -27,14 +27,14 @@ rnbqkbnr
 
         assert_eq!(
             game.board.to_string(),
-            "RNBQKBNR
-PPPPPPPP
---------
---------
---------
---------
+            "rnbqkbnr
 pppppppp
-rnbqkbnr
+--------
+--------
+--------
+--------
+PPPPPPPP
+RNBQKBNR
 "
         );
     }
@@ -61,14 +61,14 @@ rnbqkbnr
         board_str_equal(
             game.board.to_string(),
             "
-            RNBQKBNR
-            PPPPPPPP
-            --------
-            --------
-            --------
-            --n-----
-            pppppppp
-            r-bqkbnr
+rnbqkbnr
+pppppppp
+--------
+--------
+--------
+--N-----
+PPPPPPPP
+R-BQKBNR
     "
             .to_string(),
         );
@@ -104,7 +104,7 @@ rnbqkbnr
                 --------
                 --------
                 --------
-                r---k--r
+                R---K--R
             ",
         );
 
@@ -126,7 +126,7 @@ rnbqkbnr
                 --------
                 --------
                 --------
-                --kr---r
+                --KR---R
     "
             .to_string(),
         );
@@ -137,7 +137,7 @@ rnbqkbnr
         let mut game = game_from_board(
             "
                 --------
-                ----p---
+                ----P---
                 --------
                 --------
                 --------
@@ -161,7 +161,7 @@ rnbqkbnr
         board_str_equal(
             game.board.to_string(),
             "
-                ----n---
+                ----N---
                 --------
                 --------
                 --------
@@ -179,7 +179,7 @@ rnbqkbnr
         let game = game_from_board(
             "
                 --------
-                ----p---
+                ----P---
                 --------
                 --------
                 --------
@@ -212,7 +212,7 @@ rnbqkbnr
         let game = game_from_board(
             "
                 --------
-                ----p---
+                ----P---
                 --------
                 --------
                 --------

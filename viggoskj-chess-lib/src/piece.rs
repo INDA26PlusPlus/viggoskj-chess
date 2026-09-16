@@ -6,7 +6,7 @@ use crate::instantiation::{black_default_pawn_board, white_default_pawn_board};
 use crate::moves::BasicMove;
 use crate::{bitboard, game};
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PieceType {
     Pawn,
     Rook,
@@ -39,8 +39,8 @@ impl PieceType {
 impl Piece {
     pub fn to_char(&self) -> char {
         match self.piece_color {
-          Color::Black => self.piece_type.to_char().to_ascii_uppercase(),
-          Color::White => self.piece_type.to_char(),
+          Color::Black => self.piece_type.to_char(),
+          Color::White => self.piece_type.to_char().to_ascii_uppercase(),
         }
     }
 }

@@ -55,7 +55,6 @@ fn bitboard_from_str(
     color: Color,
 ) -> Result<bitboard::Bitboard, ChessError> {
     let cleaned = string.replace('\n', "");
-
     if cleaned.len() != 64 {
         return Err(ChessError::InvalidBoardString);
     }
