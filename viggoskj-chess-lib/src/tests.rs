@@ -8,6 +8,7 @@ use crate::{
 mod basic_tests;
 mod en_pessant_tests;
 mod move_checks;
+mod check_mate_tests;
 #[cfg(test)]
 
 pub mod tests {

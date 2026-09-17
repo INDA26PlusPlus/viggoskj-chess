@@ -1,6 +1,6 @@
 use crate::advanced_moves::advanced_move_movement;
 use crate::bitboard::{Bitboard, bitboard_if, bitboard_string, displace, point};
-use crate::board::Square;
+use crate::board::{Square, to_square};
 use crate::board::{self, ColorBoard};
 use crate::chess_error::ChessError;
 use crate::game::Color;
@@ -48,6 +48,15 @@ pub fn validate_move(chess_move: BasicMove) -> Result<(), ChessError> {
     board::validate_square(chess_move.piece_square.row, chess_move.piece_square.col)?;
     board::validate_square(chess_move.target_square.row, chess_move.target_square.col)?;
     Ok(())
+}
+
+pub fn possible_move_to_move(possible: PossibleMove) -> Move {
+    Move::Basic {
+        chess_move: BasicMove {
+            piece_square: to_square(possible.piece.board_position).unwrap(),
+            target_square: possible.taget_square,
+        },
+    }
 }
 
 pub fn legal_basic_moves_bitboard(

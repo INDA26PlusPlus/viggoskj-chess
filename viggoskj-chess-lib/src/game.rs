@@ -37,6 +37,21 @@ pub struct Game {
     pub turn: Color,
 }
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum Color {
+    Black,
+    White,
+}
+
+impl Color {
+    pub fn other(&self) -> Color {
+        match self {
+            Color::Black => Color::White,
+            Color::White => Color::Black,
+        }
+    }
+}
+
 pub fn resolve_advanced_move(
     game: &Game,
     chess_move: BasicMove,
@@ -135,7 +150,6 @@ pub fn initialy_legal_moves_bitboard(
     game: &Game,
     target_piece: Square,
 ) -> Result<Bitboard, ChessError> {
-
     let (_, basic_moves) =
         board::initialy_legal_basic_moves_bitboard(&game.board, target_piece, game.turn)?;
 
@@ -250,23 +264,6 @@ pub fn play_advanced_move(game: &Game, chess_move: AdvancedMove) -> Result<Game,
             basic_move,
         } => play_promotion(game, piece_type, basic_move),
         AdvancedMove::EnPessant { basic_move } => advanced_moves::do_en_pessant(game, basic_move),
-    }
-}
-
-pub struct MoveResult {}
-
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub enum Color {
-    Black,
-    White,
-}
-
-impl Color {
-    pub fn other(&self) -> Color {
-        match self {
-            Color::Black => Color::White,
-            Color::White => Color::Black,
-        }
     }
 }
 
@@ -385,7 +382,6 @@ pub fn trim_illegal_moves(game: &Game, piece: Piece, moves: Bitboard) -> Bitboar
     bitboard_iterator(moves)
         .filter(|(_, truthy)| *truthy)
         .filter(|(square, _)| {
-
             if let Ok(game_res) = play_move(
                 game,
                 moves::Move::Basic {
