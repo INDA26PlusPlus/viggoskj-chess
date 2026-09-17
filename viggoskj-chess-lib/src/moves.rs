@@ -1,7 +1,6 @@
-use crate::advanced_moves::advanced_move_movement;
-use crate::bitboard::{Bitboard, bitboard_if, bitboard_string, displace, point};
+use crate::bitboard::{Bitboard, bitboard_if, displace};
 use crate::board::{Square, to_square};
-use crate::board::{self, ColorBoard};
+use crate::board::{self};
 use crate::chess_error::ChessError;
 use crate::game::Color;
 use crate::instantiation;
@@ -44,12 +43,14 @@ pub enum Move {
     Basic { chess_move: BasicMove },
 }
 
+/// validates a move is within the board
 pub fn validate_move(chess_move: BasicMove) -> Result<(), ChessError> {
     board::validate_square(chess_move.piece_square.row, chess_move.piece_square.col)?;
     board::validate_square(chess_move.target_square.row, chess_move.target_square.col)?;
     Ok(())
 }
 
+/// converts a possible move in to a playable move
 pub fn possible_move_to_move(possible: PossibleMove) -> Move {
     Move::Basic {
         chess_move: BasicMove {
@@ -59,7 +60,7 @@ pub fn possible_move_to_move(possible: PossibleMove) -> Move {
     }
 }
 
-pub fn legal_basic_moves_bitboard(
+pub(crate) fn legal_basic_moves_bitboard(
     piece: Piece,
     playing_mask: Bitboard,
     waiting_mask: Bitboard,
@@ -162,27 +163,6 @@ fn move_bitboard(
 
     now = single_move_bitboard(row_move, col_move, now, playing_mask);
     return now & (!piece_placement);
-}
-
-pub fn is_same_movement(move1: Move, move2: Move, color: Color) -> bool {
-    match move1 {
-        Move::Advanced { chess_move } => match move2 {
-            Move::Advanced {
-                chess_move: chess_move2,
-            } => chess_move == chess_move2,
-            Move::Basic {
-                chess_move: chess_move2,
-            } => chess_move2 == advanced_move_movement(chess_move, color),
-        },
-        Move::Basic { chess_move } => match move2 {
-            Move::Advanced {
-                chess_move: chess_move2,
-            } => chess_move == advanced_move_movement(chess_move2, color),
-            Move::Basic {
-                chess_move: chess_move2,
-            } => chess_move == chess_move2,
-        },
-    }
 }
 
 fn single_move_bitboard(

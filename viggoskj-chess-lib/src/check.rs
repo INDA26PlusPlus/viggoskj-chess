@@ -1,11 +1,8 @@
-use std::arch::x86_64::_MM_CMPINT_TRUE;
-
 use crate::{
     game::{
-        Color, Game, if_other_turn, play_move, playing_board, possible_initialy_legal_oponent_turn,
+        Game, playing_board, possible_initialy_legal_oponent_turn,
         possible_legal_moves,
     },
-    moves::possible_move_to_move,
 };
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -15,6 +12,7 @@ pub enum CheckState {
     Check,
 }
 
+/// checks if the current turns player is in check
 pub fn is_check(game: &Game) -> bool {
     let attack_board: u64 = possible_initialy_legal_oponent_turn(game)
         .iter()
@@ -25,6 +23,7 @@ pub fn is_check(game: &Game) -> bool {
     return playing.kings & attack_board > 0;
 }
 
+/// checks if the current turns player is in check, checkmate, stalemate or none
 pub fn get_check_state(game: &Game) -> Option<CheckState> {
     let legal_move_count = possible_legal_moves(game).len();
 

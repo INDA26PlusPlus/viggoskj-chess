@@ -1,19 +1,16 @@
-use crate::{
-    board::Square,
-    game::{Color, Game},
-    moves::BasicMove,
-    parsing,
-};
-
 mod basic_tests;
+mod check_mate_tests;
 mod en_pessant_tests;
 mod move_checks;
-mod check_mate_tests;
 #[cfg(test)]
 
 pub mod tests {
-    use crate::{board::Square, game::{Color, Game}, moves::BasicMove, parsing};
-
+    use crate::{
+        board::Square,
+        game::{Color, Game},
+        moves::{AdvancedMove, BasicMove, Move},
+        parsing,
+    };
 
     pub fn basic_move(col1: u32, row1: u32, col2: u32, row2: u32) -> BasicMove {
         return BasicMove {
@@ -26,6 +23,50 @@ pub mod tests {
                 col: col2,
             },
         };
+    }
+
+    pub(crate) fn advanced_move_movement(advanced_move: AdvancedMove, color: Color) -> BasicMove {
+        let row = match color {
+            Color::Black => 7,
+            Color::White => 0,
+        };
+
+        match advanced_move {
+            AdvancedMove::EnPessant { basic_move } => basic_move,
+            AdvancedMove::KingSideCastle => BasicMove {
+                piece_square: Square { row: row, col: 4 },
+                target_square: Square { row: row, col: 6 },
+            },
+            AdvancedMove::QueenSideCastle => BasicMove {
+                piece_square: Square { row: row, col: 4 },
+                target_square: Square { row: row, col: 2 },
+            },
+            AdvancedMove::Promotion {
+                piece_type: _,
+                basic_move,
+            } => basic_move,
+        }
+    }
+
+    pub fn is_same_movement(move1: Move, move2: Move, color: Color) -> bool {
+        match move1 {
+            Move::Advanced { chess_move } => match move2 {
+                Move::Advanced {
+                    chess_move: chess_move2,
+                } => chess_move == chess_move2,
+                Move::Basic {
+                    chess_move: chess_move2,
+                } => chess_move2 == advanced_move_movement(chess_move, color),
+            },
+            Move::Basic { chess_move } => match move2 {
+                Move::Advanced {
+                    chess_move: chess_move2,
+                } => chess_move == advanced_move_movement(chess_move2, color),
+                Move::Basic {
+                    chess_move: chess_move2,
+                } => chess_move == chess_move2,
+            },
+        }
     }
 
     pub fn game_from_board(board_str: &str) -> Game {
@@ -49,7 +90,7 @@ pub mod tests {
         }
     }
 
-        pub fn game_from_board_advanced(board_str: &str, color: Color) -> Game {
+    pub fn game_from_board_advanced(board_str: &str, color: Color) -> Game {
         Game {
             white_rook_left_moved: false,
             white_rook_right_moved: false,

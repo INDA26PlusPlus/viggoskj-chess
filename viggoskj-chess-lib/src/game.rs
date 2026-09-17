@@ -1,21 +1,16 @@
-use std::vec;
-
 use crate::{
     advanced_moves::{
-        self, can_promote, can_try_kingside_castle, can_try_queenside_castle, do_kingside_castling,
+        self, can_try_kingside_castle, can_try_queenside_castle, do_kingside_castling,
         do_promotion, do_queenside_castling, initialy_legal_advanced_moves_bitboard,
         legal_kingside_castling_move, legal_queenside_castling_move_bitboard,
     },
-    bitboard::{
-        self, Bitboard, bitboard_bit_count, bitboard_if, bitboard_iterator, bitboard_string, point,
-    },
+    bitboard::{self, Bitboard, bitboard_if, bitboard_iterator, point},
     board::{
-        self, Board, ColorBoard, Square, initialy_legal_basic_moves_bitboard, select_playing_board,
-        square_bitboard, to_square, validate_square,
+        self, Board, ColorBoard, Square, initialy_legal_basic_moves_bitboard, square_bitboard,
+        to_square,
     },
     check::is_check,
     chess_error::{ChessError, InvalidMoveReason::NoTargetPiece},
-    game::Color::White,
     instantiation,
     moves::{self, AdvancedMove, BasicMove, Move, PossibleMove, PossibleMovesBitboard},
     piece::{Piece, PieceType},
@@ -30,8 +25,8 @@ pub struct Game {
     pub(crate) black_rook_right_moved: bool,
     pub(crate) black_king_moved: bool,
 
-    pub(crate) white_en_pessant: Bitboard,
-    pub(crate) black_en_pessant: Bitboard,
+    pub white_en_pessant: Bitboard,
+    pub black_en_pessant: Bitboard,
 
     pub board: Board,
     pub turn: Color,
@@ -44,6 +39,7 @@ pub enum Color {
 }
 
 impl Color {
+    /// gets the other color
     pub fn other(&self) -> Color {
         match self {
             Color::Black => Color::White,
@@ -52,7 +48,7 @@ impl Color {
     }
 }
 
-pub fn resolve_advanced_move(
+pub(crate) fn resolve_advanced_move(
     game: &Game,
     chess_move: BasicMove,
 ) -> Result<AdvancedMove, ChessError> {
@@ -109,6 +105,7 @@ pub fn resolve_advanced_move(
     })
 }
 
+/// plays a legal move and returns the next game state
 pub fn play_move(game: &Game, chess_move: Move) -> Result<Game, ChessError> {
     match chess_move {
         Move::Basic { chess_move: basic } => {
@@ -122,7 +119,7 @@ pub fn play_move(game: &Game, chess_move: Move) -> Result<Game, ChessError> {
     }
 }
 
-pub fn legal_basic_moves_bitboard(
+pub(crate) fn legal_basic_moves_bitboard(
     game: &Game,
     piece_square: Square,
 ) -> Result<(Piece, Bitboard), ChessError> {
@@ -130,7 +127,7 @@ pub fn legal_basic_moves_bitboard(
     Ok((piece, trim_illegal_moves(game, piece, moves)))
 }
 
-pub fn legal_advanced_moves_bitboard(
+pub(crate) fn legal_advanced_moves_bitboard(
     game: &Game,
     piece_square: Square,
 ) -> Result<(Piece, Bitboard), ChessError> {
@@ -138,6 +135,7 @@ pub fn legal_advanced_moves_bitboard(
     Ok((piece, trim_illegal_moves(game, piece, moves)))
 }
 
+/// gives a bitboard of all legal moves of the target piece
 pub fn legal_moves_bitboard(game: &Game, target_piece: Square) -> Result<Bitboard, ChessError> {
     let (_, basic_moves) = legal_basic_moves_bitboard(&game, target_piece)?;
 
@@ -146,7 +144,7 @@ pub fn legal_moves_bitboard(game: &Game, target_piece: Square) -> Result<Bitboar
     return Ok(basic_moves | advanced_moves);
 }
 
-pub fn initialy_legal_moves_bitboard(
+pub(crate) fn initialy_legal_moves_bitboard(
     game: &Game,
     target_piece: Square,
 ) -> Result<Bitboard, ChessError> {
@@ -159,7 +157,7 @@ pub fn initialy_legal_moves_bitboard(
     return Ok(basic_moves | advanced_moves);
 }
 
-pub fn play_basic_move(game: &Game, chess_move: BasicMove) -> Result<Game, ChessError> {
+pub(crate) fn play_basic_move(game: &Game, chess_move: BasicMove) -> Result<Game, ChessError> {
     let piece_mask = point(chess_move.piece_square.row, chess_move.piece_square.col);
 
     let (new_board, moved_piece) = board::do_basic_move(&game.board, chess_move, game.turn)?;
@@ -241,7 +239,7 @@ pub fn play_basic_move(game: &Game, chess_move: BasicMove) -> Result<Game, Chess
     })
 }
 
-pub fn play_promotion(
+pub(crate) fn play_promotion(
     game: &Game,
     promotion_type: PieceType,
     basic_move: BasicMove,
@@ -255,7 +253,10 @@ pub fn play_promotion(
     do_promotion(game, promotion_type, basic_move)
 }
 
-pub fn play_advanced_move(game: &Game, chess_move: AdvancedMove) -> Result<Game, ChessError> {
+pub(crate) fn play_advanced_move(
+    game: &Game,
+    chess_move: AdvancedMove,
+) -> Result<Game, ChessError> {
     match chess_move {
         AdvancedMove::KingSideCastle => do_kingside_castling(game),
         AdvancedMove::QueenSideCastle => do_queenside_castling(game),
@@ -271,6 +272,7 @@ fn piece_moved(piece_position: Bitboard, moved_piece: Bitboard) -> bool {
     (piece_position & moved_piece) > 0
 }
 
+/// gets the board of the player whos turn it is
 pub fn playing_board(game: &Game) -> (ColorBoard, ColorBoard) {
     match game.turn {
         Color::Black => (game.board.black, game.board.white),
@@ -278,6 +280,7 @@ pub fn playing_board(game: &Game) -> (ColorBoard, ColorBoard) {
     }
 }
 
+/// gets the board of the waiting playes attackable "ghost" pawns
 pub fn wating_en_pessant_pawns(game: &Game) -> Bitboard {
     match game.turn {
         Color::Black => game.white_en_pessant,
@@ -285,6 +288,7 @@ pub fn wating_en_pessant_pawns(game: &Game) -> Bitboard {
     }
 }
 
+/// lists all possible legal moves of the playing player
 pub fn possible_legal_moves(game: &Game) -> Vec<PossibleMove> {
     Vec::from_iter(
         possible_legal_move_bitboards(game)
@@ -301,10 +305,11 @@ pub fn possible_legal_moves(game: &Game) -> Vec<PossibleMove> {
     )
 }
 
-pub fn possible_initialy_legal_oponent_turn(game: &Game) -> Vec<PossibleMovesBitboard> {
+pub(crate) fn possible_initialy_legal_oponent_turn(game: &Game) -> Vec<PossibleMovesBitboard> {
     possible_initialy_legal_move_bitboards(&if_other_turn(game))
 }
 
+/// lists all possible legal move bitboards for each piece of the playing player
 pub fn possible_legal_move_bitboards(game: &Game) -> Vec<PossibleMovesBitboard> {
     let mut moves: Vec<PossibleMovesBitboard> = Vec::new();
 
@@ -334,7 +339,7 @@ pub fn possible_legal_move_bitboards(game: &Game) -> Vec<PossibleMovesBitboard> 
     return moves;
 }
 
-pub fn possible_initialy_legal_move_bitboards(game: &Game) -> Vec<PossibleMovesBitboard> {
+pub(crate) fn possible_initialy_legal_move_bitboards(game: &Game) -> Vec<PossibleMovesBitboard> {
     let mut moves: Vec<PossibleMovesBitboard> = Vec::new();
 
     let (playing, _) = playing_board(game);
@@ -363,7 +368,7 @@ pub fn possible_initialy_legal_move_bitboards(game: &Game) -> Vec<PossibleMovesB
     return moves;
 }
 
-pub fn if_other_turn(game: &Game) -> Game {
+pub(crate) fn if_other_turn(game: &Game) -> Game {
     Game {
         white_rook_left_moved: game.white_rook_left_moved,
         white_rook_right_moved: game.white_rook_right_moved,
@@ -378,6 +383,7 @@ pub fn if_other_turn(game: &Game) -> Game {
     }
 }
 
+/// removes all illegal moves form a move bitboard
 pub fn trim_illegal_moves(game: &Game, piece: Piece, moves: Bitboard) -> Bitboard {
     bitboard_iterator(moves)
         .filter(|(_, truthy)| *truthy)

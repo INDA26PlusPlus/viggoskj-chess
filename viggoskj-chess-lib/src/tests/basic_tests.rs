@@ -2,10 +2,8 @@
 
 mod tests {
     use crate::{
-        bitboard::bitboard_string, board::Square, chess_error::ChessError, create_game, game::{self, Color, Game, play_move}, moves::BasicMove, parsing::{parse_board, parse_move}, tests::tests::{basic_move, board_str_equal, game_from_board},
+        chess_error::ChessError, create_game, game::{Color, play_move}, parsing::{parse_board}, tests::tests::{basic_move, board_str_equal, game_from_board},
     };
-
-    use super::*;
 
     #[test]
     fn parse_board_correct() {

@@ -4,8 +4,6 @@ mod tests {
         chess_error::{ChessError, InvalidMoveReason::NotAMoveOption}, game::play_move, tests::tests::{basic_move, board_str_equal, game_from_board},
     };
 
-    use super::*;
-
     #[test]
     fn white_en_pessant() {
         let mut game = game_from_board(

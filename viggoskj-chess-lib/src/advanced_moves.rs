@@ -1,4 +1,4 @@
-use crate::bitboard::{self, Bitboard, bitboard_string};
+use crate::bitboard::{self, Bitboard};
 use crate::board::{back_row, initialy_legal_basic_moves_bitboard};
 use crate::moves;
 use crate::piece::Piece;
@@ -11,11 +11,11 @@ use crate::{
         Color::{self, Black, White},
         Game, playing_board,
     },
-    moves::{AdvancedMove, BasicMove},
+    moves::BasicMove,
     piece::{self, PieceType},
 };
 
-pub fn initialy_legal_advanced_moves_bitboard(
+pub(crate) fn initialy_legal_advanced_moves_bitboard(
     game: &Game,
     piece_square: Square,
 ) -> Result<(Piece, Bitboard), ChessError> {
@@ -59,6 +59,7 @@ pub fn initialy_legal_advanced_moves_bitboard(
     Ok((piece, moves & !(square_bitboard(piece_square))))
 }
 
+/// if the current player can try queenside castle (not moved nessesary pieces)
 pub fn can_try_queenside_castle(game: &Game) -> bool {
     if game.turn == Color::White {
         if !game.white_king_moved && !game.white_rook_left_moved {
@@ -72,6 +73,7 @@ pub fn can_try_queenside_castle(game: &Game) -> bool {
     return false;
 }
 
+/// if the current player can try kingside castle (not moved nessesary pieces)
 pub fn can_try_kingside_castle(game: &Game) -> bool {
     if game.turn == Color::White {
         if !game.white_king_moved && !game.white_rook_right_moved {
@@ -85,7 +87,7 @@ pub fn can_try_kingside_castle(game: &Game) -> bool {
     return false;
 }
 
-pub fn do_kingside_castling(game: &Game) -> Result<Game, ChessError> {
+pub(crate) fn do_kingside_castling(game: &Game) -> Result<Game, ChessError> {
     let king_row = back_row(game.turn);
     let (playing_board, waiting_board) = playing_board(game);
 
@@ -112,7 +114,7 @@ pub fn do_kingside_castling(game: &Game) -> Result<Game, ChessError> {
     })
 }
 
-pub fn do_queenside_castling(game: &Game) -> Result<Game, ChessError> {
+pub(crate) fn do_queenside_castling(game: &Game) -> Result<Game, ChessError> {
     let king_row = back_row(game.turn);
     let (playing_board, waiting_board) = playing_board(game);
 
@@ -139,7 +141,11 @@ pub fn do_queenside_castling(game: &Game) -> Result<Game, ChessError> {
     })
 }
 
-pub fn can_promote(board: &Board, pawn_square: Square, playing: Color) -> Result<bool, ChessError> {
+pub(crate) fn can_promote(
+    board: &Board,
+    pawn_square: Square,
+    playing: Color,
+) -> Result<bool, ChessError> {
     let piece = match board.get_pice(pawn_square.row, pawn_square.col) {
         Some(t) => t,
         _ => {
@@ -162,7 +168,7 @@ pub fn can_promote(board: &Board, pawn_square: Square, playing: Color) -> Result
     Ok(square_bitboard(pawn_square) & move_mask != 0)
 }
 
-pub fn do_promotion(
+pub(crate) fn do_promotion(
     game: &Game,
     promotion_type: PieceType,
     basic_move: BasicMove,
@@ -228,7 +234,7 @@ pub fn do_promotion(
     })
 }
 
-pub fn do_en_pessant(game: &Game, chess_move: BasicMove) -> Result<Game, ChessError> {
+pub(crate) fn do_en_pessant(game: &Game, chess_move: BasicMove) -> Result<Game, ChessError> {
     let (new_board, _) = board::do_basic_move(&game.board, chess_move, game.turn)?;
 
     let forward = match game.turn {
@@ -264,7 +270,7 @@ pub fn do_en_pessant(game: &Game, chess_move: BasicMove) -> Result<Game, ChessEr
     })
 }
 
-pub fn legal_kingside_castling_move(full_mask: Bitboard, row: u32) -> Bitboard {
+pub(crate) fn legal_kingside_castling_move(full_mask: Bitboard, row: u32) -> Bitboard {
     if full_mask & !(point(row, 6) | point(row, 5)) == full_mask {
         point(row, 6)
     } else {
@@ -272,33 +278,10 @@ pub fn legal_kingside_castling_move(full_mask: Bitboard, row: u32) -> Bitboard {
     }
 }
 
-pub fn legal_queenside_castling_move_bitboard(full_mask: Bitboard, row: u32) -> Bitboard {
+pub(crate) fn legal_queenside_castling_move_bitboard(full_mask: Bitboard, row: u32) -> Bitboard {
     if full_mask & !(point(row, 1) | point(row, 2) | point(row, 3)) == full_mask {
         point(row, 2)
     } else {
         0
-    }
-}
-
-pub fn advanced_move_movement(advanced_move: AdvancedMove, color: Color) -> BasicMove {
-    let row = match color {
-        Black => 7,
-        White => 0,
-    };
-
-    match advanced_move {
-        AdvancedMove::EnPessant { basic_move } => basic_move,
-        AdvancedMove::KingSideCastle => BasicMove {
-            piece_square: Square { row: row, col: 4 },
-            target_square: Square { row: row, col: 6 },
-        },
-        AdvancedMove::QueenSideCastle => BasicMove {
-            piece_square: Square { row: row, col: 4 },
-            target_square: Square { row: row, col: 2 },
-        },
-        AdvancedMove::Promotion {
-            piece_type: _,
-            basic_move,
-        } => basic_move,
     }
 }

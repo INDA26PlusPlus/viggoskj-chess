@@ -1,10 +1,6 @@
-use std::{panic::panic_any, vec};
+use std::vec;
 
-use viggoskj_chess_lib::{
-    bitboard::{self, Bitboard, bitboard_string, displace},
-    game, parsing,
-    piece::{self},
-};
+use viggoskj_chess_lib::{bitboard::bitboard_string, parsing};
 
 pub fn main() {
     let moves_ant_pessant = vec!["d2d3", "h7h6", "d3d4", "g7g6", "d4d5", "e7e5", "d5e6"];
@@ -31,7 +27,7 @@ fn play_game(moves: std::vec::Vec<&str>) {
                         println!(
                             "{}",
                             bitboard_string(
-                                viggoskj_chess_lib::game::initialy_legal_moves_bitboard(
+                                viggoskj_chess_lib::game::legal_moves_bitboard(
                                     &g,
                                     chess_move.piece_square
                                 )
@@ -50,7 +46,7 @@ fn play_game(moves: std::vec::Vec<&str>) {
                             println!(
                                 "{}",
                                 bitboard_string(
-                                    viggoskj_chess_lib::game::initialy_legal_moves_bitboard(
+                                    viggoskj_chess_lib::game::legal_moves_bitboard(
                                         &g,
                                         basic_move.piece_square
                                     )
@@ -59,13 +55,11 @@ fn play_game(moves: std::vec::Vec<&str>) {
                             );
                             println!("{}", piece_type.to_char());
                         }
-                        viggoskj_chess_lib::moves::AdvancedMove::EnPessant {
-                            basic_move,
-                        } => {
+                        viggoskj_chess_lib::moves::AdvancedMove::EnPessant { basic_move } => {
                             println!(
                                 "{}",
                                 bitboard_string(
-                                    viggoskj_chess_lib::game::initialy_legal_moves_bitboard(
+                                    viggoskj_chess_lib::game::legal_moves_bitboard(
                                         &g,
                                         basic_move.piece_square
                                     )

@@ -1,10 +1,5 @@
-use crate::bitboard::{Bitboard, displace, point};
-use crate::board::{Square, validate_square};
-use crate::chess_error::ChessError;
+use crate::bitboard::{Bitboard};
 use crate::game::Color;
-use crate::instantiation::{black_default_pawn_board, white_default_pawn_board};
-use crate::moves::BasicMove;
-use crate::{bitboard, game};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PieceType {
@@ -18,7 +13,7 @@ pub enum PieceType {
 
 #[derive(Copy, Clone)]
 pub struct Piece {
-    pub piece_color: game::Color,
+    pub piece_color: Color,
     pub piece_type: PieceType,
     pub board_position: Bitboard,
 }
@@ -46,7 +41,7 @@ impl Piece {
 }
 
 
-pub fn if_piece_type(
+pub(crate) fn if_piece_type(
     piece_type: PieceType,
     required_piece_type: PieceType,
     board: Bitboard,

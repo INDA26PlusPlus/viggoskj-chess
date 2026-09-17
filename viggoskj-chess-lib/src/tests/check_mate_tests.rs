@@ -1,18 +1,8 @@
 #[cfg(test)]
 mod tests {
     use crate::{
-        bitboard::bitboard_string,
-        board::{Square, to_square},
-        check::{CheckState, get_check_state},
-        chess_error::{ChessError, InvalidMoveReason::NotAMoveOption},
-        create_game,
-        game::{Color, legal_moves_bitboard, play_move, possible_legal_moves},
-        moves::{BasicMove, Move, is_same_movement},
-        parsing,
-        tests::tests::{basic_move, board_str_equal, game_from_board, game_from_board_advanced},
+        board::to_square, check::{CheckState, get_check_state}, game::{Color, possible_legal_moves}, moves::{BasicMove, Move}, parsing, tests::tests::{game_from_board_advanced, is_same_movement},
     };
-
-    use super::*;
 
     fn moves_from_string(moves: String) -> Vec<Move> {
         if moves.len() == 0 {

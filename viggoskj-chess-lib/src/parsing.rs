@@ -1,10 +1,11 @@
 use crate::board::Board;
-use crate::chess_error::{self, ChessError};
+use crate::chess_error::{ChessError};
 use crate::game::Color;
 use crate::piece::PieceType;
 use crate::{bitboard, board};
 use crate::{moves, piece};
 
+/// parses a string into a move ex f4b2
 pub fn parse_move(move_str: &str) -> Result<moves::Move, ChessError> {
     match move_str.len() {
         4 => Ok(moves::Move::Basic {
@@ -17,6 +18,7 @@ pub fn parse_move(move_str: &str) -> Result<moves::Move, ChessError> {
     }
 }
 
+/// turns a single square string into a square ex f5
 pub fn parse_square(move_str: &str) -> Result<board::Square, ChessError> {
     if move_str.len() != 2 {
         return Err(ChessError::InvalidMoveString);
@@ -28,6 +30,15 @@ pub fn parse_square(move_str: &str) -> Result<board::Square, ChessError> {
     }
 }
 
+/// parses a whple lboard like
+/// rnq--rk-
+/// pb--bppp
+/// -p-ppn--
+/// --------
+/// PPPNP---
+/// ------P-
+/// ---N-PBP
+/// R-BQ-RK-
 pub fn parse_board(board_str: String) -> Result<board::Board, ChessError> {
     Ok(Board {
         black: board::ColorBoard {

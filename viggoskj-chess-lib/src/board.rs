@@ -1,10 +1,6 @@
-use core::fmt;
-use std::mem::transmute;
-
-use crate::advanced_moves::initialy_legal_advanced_moves_bitboard;
-use crate::bitboard::{Bitboard, BitboardIterator, bitboard_iterator, bitboard_string, point};
+use crate::bitboard::{Bitboard, bitboard_iterator, point};
 use crate::chess_error::ChessError;
-use crate::game::{Color, Game, play_move};
+use crate::game::{Color};
 use crate::moves::BasicMove;
 use crate::piece::{Piece, PieceType, if_piece_type};
 use crate::{bitboard, piece};
@@ -33,6 +29,7 @@ pub struct Square {
 }
 
 impl ColorBoard {
+    /// returns the whole bitboard mask of the board
     pub fn mask(&self) -> Bitboard {
         self.pawns | self.knights | self.bishops | self.rooks | self.queens | self.kings
     }
@@ -82,6 +79,7 @@ impl ToString for Board {
 }
 
 impl Board {
+    /// gets a piece at a location on the board
     pub fn get_pice(&self, row: u32, col: u32) -> Option<Piece> {
         if let Some(piece_type) = self.white.at(row, col) {
             return Some(Piece {
@@ -109,16 +107,18 @@ impl Board {
         }
     }
 
+    /// gets the mask of the whole board
     pub fn mask(&self) -> Bitboard {
         self.white.mask() | self.black.mask()
     }
 }
 
+/// gets a bitboard representation of a square
 pub fn square_bitboard(square: Square) -> Bitboard {
     point(square.row, square.col)
 }
 
-pub fn create_start_board() -> Board {
+pub(crate) fn create_start_board() -> Board {
     let board: Board = Board {
         white: instantiation::white_default_board(),
         black: instantiation::black_default_board(),
@@ -127,11 +127,12 @@ pub fn create_start_board() -> Board {
     return board;
 }
 
+/// turns a point on a bitboard to a square
 pub fn to_square(bitboard: Bitboard) -> Result<Square, ChessError> {
     // TODO  Fing fix
     let truthy = bitboard_iterator(bitboard)
-        .filter(|(square, truthy)| *truthy)
-        .map(|(square, truthy)| square);
+        .filter(|(_, truthy)| *truthy)
+        .map(|(square, _)| square);
 
     for v in truthy {
         return Ok(v);
@@ -140,6 +141,7 @@ pub fn to_square(bitboard: Bitboard) -> Result<Square, ChessError> {
     Err(ChessError::InvalidSquare)
 }
 
+/// validates a square is within bounds
 pub fn validate_square(row: u32, col: u32) -> Result<(), ChessError> {
     if row >= 8 || col >= 8 {
         Err(ChessError::InvalidSquare)
@@ -148,7 +150,7 @@ pub fn validate_square(row: u32, col: u32) -> Result<(), ChessError> {
     }
 }
 
-pub fn initialy_legal_basic_moves_bitboard(
+pub(crate) fn initialy_legal_basic_moves_bitboard(
     board: &Board,
     piece_square: Square,
     playing: Color,
@@ -170,7 +172,7 @@ pub fn initialy_legal_basic_moves_bitboard(
 }
 
 // todo, actually move the move enforcement into the game layer
-pub fn do_basic_move(
+pub(crate) fn do_basic_move(
     board: &Board,
     chess_move: BasicMove,
     playing: Color,
@@ -217,6 +219,7 @@ pub fn do_basic_move(
     ))
 }
 
+/// selects the board of the color
 pub fn select_playing_board(board: &Board, color: Color) -> (ColorBoard, ColorBoard) {
     match color {
         Color::Black => (board.black, board.white),
@@ -224,7 +227,7 @@ pub fn select_playing_board(board: &Board, color: Color) -> (ColorBoard, ColorBo
     }
 }
 
-pub fn new_board(
+pub(crate) fn new_board(
     new_playing_board: ColorBoard,
     new_waiting_board: ColorBoard,
     playing: Color,
@@ -241,7 +244,7 @@ pub fn new_board(
     }
 }
 
-pub fn back_row(color: Color) -> u32 {
+pub(crate) fn back_row(color: Color) -> u32 {
     match color {
         Color::White => 0,
         Color::Black => 7,

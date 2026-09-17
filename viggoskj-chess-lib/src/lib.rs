@@ -5,11 +5,13 @@ pub mod game;
 pub mod piece;
 pub mod moves;
 pub mod parsing;
+pub mod check;
+pub mod advanced_moves;
 mod tests;
-mod advanced_moves;
 mod instantiation;
-mod check;
 
+
+/// creates the initial game state
 pub fn create_game() -> game::Game {
     let game: game::Game = game::Game {
         board: board::create_start_board(),

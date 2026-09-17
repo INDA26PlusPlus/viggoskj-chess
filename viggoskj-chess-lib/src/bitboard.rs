@@ -1,4 +1,4 @@
-use crate::{advanced_moves::can_try_kingside_castle, board::Square};
+use crate::board::Square;
 
 pub type Bitboard = u64;
 
