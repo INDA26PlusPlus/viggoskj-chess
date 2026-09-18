@@ -12,10 +12,11 @@ use crate::{
     check::is_check,
     chess_error::{ChessError, InvalidMoveReason::NoTargetPiece},
     instantiation,
-    moves::{self, AdvancedMove, BasicMove, Move, PossibleMove, PossibleMovesBitboard},
+    moves::{self, AdvancedMove, BasicMove, Move, SquareMovesBitboard},
     piece::{Piece, PieceType},
 };
 
+/// full game state, each move generate a new game state
 #[derive(Debug, PartialEq)]
 pub struct Game {
     pub(crate) white_rook_left_moved: bool,
@@ -62,6 +63,7 @@ pub(crate) fn resolve_advanced_move(
             });
         }
     };
+    
 
     if piece.piece_type == PieceType::King {
         if can_try_kingside_castle(game) {
@@ -289,29 +291,29 @@ pub fn wating_en_pessant_pawns(game: &Game) -> Bitboard {
 }
 
 /// lists all possible legal moves of the playing player
-pub fn possible_legal_moves(game: &Game) -> Vec<PossibleMove> {
+pub fn possible_legal_moves(game: &Game) -> Vec<BasicMove> {
     Vec::from_iter(
         possible_legal_move_bitboards(game)
             .iter()
             .map(|possible| {
                 bitboard_iterator(possible.moves)
                     .filter(|(_, truthy)| *truthy)
-                    .map(|(square, _)| PossibleMove {
-                        piece: possible.piece,
-                        taget_square: square,
+                    .map(|(square, _)| BasicMove {
+                        piece_square: possible.square,
+                        target_square: square,
                     })
             })
             .flatten(),
     )
 }
 
-pub(crate) fn possible_initialy_legal_oponent_turn(game: &Game) -> Vec<PossibleMovesBitboard> {
+pub(crate) fn possible_initialy_legal_oponent_turn(game: &Game) -> Vec<SquareMovesBitboard> {
     possible_initialy_legal_move_bitboards(&if_other_turn(game))
 }
 
 /// lists all possible legal move bitboards for each piece of the playing player
-pub fn possible_legal_move_bitboards(game: &Game) -> Vec<PossibleMovesBitboard> {
-    let mut moves: Vec<PossibleMovesBitboard> = Vec::new();
+pub fn possible_legal_move_bitboards(game: &Game) -> Vec<SquareMovesBitboard> {
+    let mut moves: Vec<SquareMovesBitboard> = Vec::new();
 
     let (playing, _) = playing_board(game);
 
@@ -323,15 +325,15 @@ pub fn possible_legal_move_bitboards(game: &Game) -> Vec<PossibleMovesBitboard> 
         if bit == 1 {
             let row = i / 8;
             let col = i % 8;
-            moves.push(PossibleMovesBitboard {
-                moves: match legal_moves_bitboard(game, Square { row: row, col: col }) {
+            moves.push(SquareMovesBitboard {
+                moves: match legal_moves_bitboard(game, Square { row, col }) {
                     Ok(b) => b,
                     Err(ChessError::InvalidMove {
                         reason: NoTargetPiece,
                     }) => 0,
                     Err(e) => Err(e).unwrap(),
                 },
-                piece: game.board.get_pice(row, col).unwrap(),
+                square: Square { row, col },
             });
         }
     }
@@ -339,8 +341,8 @@ pub fn possible_legal_move_bitboards(game: &Game) -> Vec<PossibleMovesBitboard> 
     return moves;
 }
 
-pub(crate) fn possible_initialy_legal_move_bitboards(game: &Game) -> Vec<PossibleMovesBitboard> {
-    let mut moves: Vec<PossibleMovesBitboard> = Vec::new();
+pub(crate) fn possible_initialy_legal_move_bitboards(game: &Game) -> Vec<SquareMovesBitboard> {
+    let mut moves: Vec<SquareMovesBitboard> = Vec::new();
 
     let (playing, _) = playing_board(game);
 
@@ -352,15 +354,15 @@ pub(crate) fn possible_initialy_legal_move_bitboards(game: &Game) -> Vec<Possibl
         if bit == 1 {
             let row = i / 8;
             let col = i % 8;
-            moves.push(PossibleMovesBitboard {
-                moves: match initialy_legal_moves_bitboard(game, Square { row: row, col: col }) {
+            moves.push(SquareMovesBitboard {
+                moves: match initialy_legal_moves_bitboard(game, Square { row, col }) {
                     Ok(b) => b,
                     Err(ChessError::InvalidMove {
                         reason: NoTargetPiece,
                     }) => 0,
                     Err(e) => Err(e).unwrap(),
                 },
-                piece: game.board.get_pice(row, col).unwrap(),
+                square: Square { row, col },
             });
         }
     }

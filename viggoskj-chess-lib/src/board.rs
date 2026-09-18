@@ -6,6 +6,8 @@ use crate::piece::{Piece, PieceType, if_piece_type};
 use crate::{bitboard, piece};
 use crate::{instantiation, moves};
 
+
+/// the bitboards of all the diferent piece types of a color (the black or white sides pieces)
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct ColorBoard {
     pub pawns: Bitboard,
@@ -16,12 +18,14 @@ pub struct ColorBoard {
     pub kings: Bitboard,
 }
 
+/// the full chess board contianing two color boards
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Board {
     pub white: ColorBoard,
     pub black: ColorBoard,
 }
 
+/// singel square on a chess board
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Square {
     pub row: u32,

@@ -1,7 +1,12 @@
 #[cfg(test)]
 mod tests {
     use crate::{
-        board::to_square, create_game, game::{Color, play_move, possible_legal_moves}, moves::{BasicMove, Move}, parsing, tests::tests::{basic_move, game_from_board_advanced, is_same_movement},
+        board::to_square,
+        create_game,
+        game::{Color, play_move, possible_legal_moves},
+        moves::{BasicMove, Move},
+        parsing,
+        tests::tests::{basic_move, game_from_board_advanced, is_same_movement},
     };
 
     fn moves_from_string(moves: String) -> Vec<Move> {
@@ -24,10 +29,7 @@ mod tests {
                 is_same_movement(
                     *expected,
                     Move::Basic {
-                        chess_move: BasicMove {
-                            piece_square: to_square(actual.piece.board_position).unwrap(),
-                            target_square: actual.taget_square,
-                        },
+                        chess_move: *actual,
                     },
                     game.turn,
                 )
@@ -38,12 +40,9 @@ mod tests {
             }
         }
 
-        for actual in &actual_moves {
+        for actual in actual_moves {
             let actual_move = Move::Basic {
-                chess_move: BasicMove {
-                    piece_square: to_square(actual.piece.board_position).unwrap(),
-                    target_square: actual.taget_square,
-                },
+                chess_move: actual
             };
 
             let found = expected_moves

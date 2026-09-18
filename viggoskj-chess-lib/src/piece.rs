@@ -11,6 +11,7 @@ pub enum PieceType {
     Knight,
 }
 
+/// a specific piece on the board
 #[derive(Copy, Clone)]
 pub struct Piece {
     pub piece_color: Color,

@@ -1,29 +1,27 @@
 use crate::bitboard::{Bitboard, bitboard_if, displace};
-use crate::board::{Square, to_square};
+use crate::board::{Square};
 use crate::board::{self};
 use crate::chess_error::ChessError;
 use crate::game::Color;
 use crate::instantiation;
 use crate::piece::{Piece, PieceType};
 
+
+/// a move from one square to another
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct BasicMove {
     pub piece_square: Square,
     pub target_square: Square,
 }
 
+/// what squares (moves bitboard) you can move a piece from a square
 #[derive(Copy, Clone)]
-pub struct PossibleMove {
-    pub piece: Piece,
-    pub taget_square: Square,
-}
-
-#[derive(Copy, Clone)]
-pub struct PossibleMovesBitboard {
-    pub piece: Piece,
+pub struct SquareMovesBitboard {
+    pub square: Square,
     pub moves: Bitboard,
 }
 
+/// Move that is more complex than moving a piece form a to b
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum AdvancedMove {
     KingSideCastle,
@@ -37,6 +35,7 @@ pub enum AdvancedMove {
     },
 }
 
+/// either a basic or advanced move
 #[derive(Copy, Clone, Debug)]
 pub enum Move {
     Advanced { chess_move: AdvancedMove },
@@ -48,16 +47,6 @@ pub fn validate_move(chess_move: BasicMove) -> Result<(), ChessError> {
     board::validate_square(chess_move.piece_square.row, chess_move.piece_square.col)?;
     board::validate_square(chess_move.target_square.row, chess_move.target_square.col)?;
     Ok(())
-}
-
-/// converts a possible move in to a playable move
-pub fn possible_move_to_move(possible: PossibleMove) -> Move {
-    Move::Basic {
-        chess_move: BasicMove {
-            piece_square: to_square(possible.piece.board_position).unwrap(),
-            target_square: possible.taget_square,
-        },
-    }
 }
 
 pub(crate) fn legal_basic_moves_bitboard(

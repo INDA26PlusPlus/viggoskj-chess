@@ -11,7 +11,17 @@ mod tests;
 mod instantiation;
 
 
-/// creates the initial game state
+pub use bitboard::*;
+pub use board::*;
+pub use chess_error::*;
+pub use game::*;
+pub use piece::*;
+pub use moves::*;
+pub use parsing::*;
+pub use check::*;
+pub use advanced_moves::*;
+
+/// creates the initial
 pub fn create_game() -> game::Game {
     let game: game::Game = game::Game {
         board: board::create_start_board(),

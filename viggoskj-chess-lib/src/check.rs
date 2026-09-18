@@ -5,6 +5,7 @@ use crate::{
     },
 };
 
+/// what check state a board is in
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum CheckState {
     Stalemate,
