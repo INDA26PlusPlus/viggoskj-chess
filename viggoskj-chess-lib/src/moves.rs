@@ -81,7 +81,7 @@ fn pawn_move_bitboard(
     (single_move_bitboard(forward, 0, piece.board_position, playing_mask) & (!wating_mask))
         | pawn_capture_bitboard(piece.board_position, wating_mask, forward)
         | bitboard_if(
-            pawn_double_step_board(piece.board_position, playing_mask, wating_mask, forward),
+            pawn_double_step_board(piece.board_position, playing_mask, wating_mask, forward) & (!wating_mask),
             piece.board_position
                 & (instantiation::black_default_pawn_board()
                     | instantiation::white_default_pawn_board())

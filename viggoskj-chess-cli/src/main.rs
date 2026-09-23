@@ -13,6 +13,7 @@ fn play_game(moves: std::vec::Vec<&str>) {
     for ms in moves {
         let m = viggoskj_chess_lib::parse_move(ms).unwrap();
         let r = viggoskj_chess_lib::game::play_move(&g, m);
+
         match r {
             Ok(g2) => {
                 g = g2;
